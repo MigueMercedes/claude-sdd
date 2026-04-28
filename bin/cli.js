@@ -93,7 +93,8 @@ program
       };
     } else if (!opts.ask && (await isExistingProject(cwd))) {
       console.log(kleur.dim('Detected existing project — deferring stack/extension detection to the `sdd` skill.'));
-      const proceed = await askConfirmInstall({ cwd });
+      const onConflict = /** @type {'overwrite'|'skip'} */ (opts.overwrite ? 'overwrite' : 'skip');
+      const proceed = await askConfirmInstall({ cwd, onConflict });
       if (!proceed) {
         console.log(kleur.red('Cancelled.'));
         process.exit(1);
@@ -104,7 +105,7 @@ program
         stack: opts.stack, // 'other' by default; skill will refine
         extensions: parsedExtensions,
         addToGitignore: opts.gitignore !== false,
-        onConflict: /** @type {'overwrite'|'skip'} */ (opts.overwrite ? 'overwrite' : 'skip'),
+        onConflict,
       };
     } else {
       const interactive = await askInteractive({ cwd });
