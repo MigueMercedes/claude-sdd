@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { installTemplates, appendGitignore, EXTENSIONS, isValidExtensionId } from '../lib/install.js';
+import { installTemplates, appendGitignore, isExistingProject, EXTENSIONS, isValidExtensionId } from '../lib/install.js';
 
 /** @type {string} */
 let tmpDir;
@@ -249,5 +249,36 @@ describe('appendGitignore', () => {
     );
     const result = await appendGitignore(tmpDir);
     expect(result.added).toBe(false);
+  });
+});
+
+describe('isExistingProject', () => {
+  it('returns false for an empty directory', async () => {
+    expect(await isExistingProject(tmpDir)).toBe(false);
+  });
+
+  it('returns true when package.json exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'package.json'), '{}');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when pyproject.toml exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'pyproject.toml'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when Cargo.toml exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'Cargo.toml'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when go.mod exists', async () => {
+    await fs.writeFile(path.join(tmpDir, 'go.mod'), '');
+    expect(await isExistingProject(tmpDir)).toBe(true);
+  });
+
+  it('returns true when .git directory exists', async () => {
+    await fs.mkdir(path.join(tmpDir, '.git'));
+    expect(await isExistingProject(tmpDir)).toBe(true);
   });
 });
