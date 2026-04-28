@@ -66,7 +66,7 @@ In your project root:
 npx github:MigueMercedes/claude-sdd init
 ```
 
-The CLI asks 4 questions (project name, stack, extensions, conflict policy) and writes ~15 files. **Existing files are never overwritten by default.**
+If you run `init` inside an existing project (manifest or `.git/` detected), the CLI skips the questions and only asks for one confirmation — stack and extensions are detected by the `sdd` skill on first invocation. In an empty directory the original 5-question flow runs. Use `--ask` to force the interactive flow regardless of detection. Either way, the CLI writes ~15 files and **existing files are never overwritten by default.**
 
 Then open Claude Code in the same directory:
 
@@ -212,7 +212,7 @@ your-project/
 ├── specs/
 │   ├── templates/
 │   │   ├── feature.spec.md         # Lean base + selected extensions merged in
-│   │   └── extensions/             # Catalog (README + 6 fragments not auto-copied)
+│   │   └── extensions/             # 6 fragments + catalog README (the `sdd` skill merges fragments on demand)
 │   ├── prompts/                    # 4 prompts: spec-generator, reviewer, test, implementation
 │   └── features/                   # Empty — populated as you write specs
 ├── docs/
@@ -272,9 +272,11 @@ The base 11 sections are universal. Anything else goes in **opt-in extensions** 
 | `external-deps` | APIs, webhooks, billing providers | Per-provider failure modes, retries, costs, sandbox, webhook idempotence |
 | `public-api` | Semver, breaking changes (libs/SDKs) | Surface affected, semver bump, breaking changes, deprecation policy, type tests |
 
-### Two ways to use them
+### Three ways to use them
 
-**Project-wide (recommended):** select during `init` and the chosen extensions get merged into `feature.spec.md` once. Every new spec inherits them.
+**Auto-detected (default for existing projects):** the `sdd` skill reads your codebase on first invocation, proposes extensions whose heuristics match (e.g. `persistent-data` if it sees `alembic/` or a Prisma schema), and merges the chosen fragments into `feature.spec.md`. You confirm.
+
+**CLI flag (manual override):** pass `--extensions` to lock in choices at install time without waiting for the skill.
 
 ```bash
 npx github:MigueMercedes/claude-sdd init --extensions multi-tenant,persistent-data,operational
@@ -343,6 +345,9 @@ npx github:MigueMercedes/claude-sdd init --overwrite
 
 # Skip .gitignore modification
 npx github:MigueMercedes/claude-sdd init --no-gitignore
+
+# Force the 5-question interactive flow even in an existing project
+npx github:MigueMercedes/claude-sdd init --ask
 ```
 
 ### Stacks supported by the picker

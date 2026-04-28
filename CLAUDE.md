@@ -35,9 +35,7 @@ There is no lint or build step. The package ships as ESM source (`"type": "modul
 `installTemplates()` is the heart. It:
 
 1. Recursively walks `templates/` to enumerate files.
-2. **Filters out** two categories the destination must never see:
-   - Source-only files (`.gitignore.additions` — consumed by `appendGitignore()` instead).
-   - Individual extension fragments under `specs/templates/extensions/*.md` (everything except `README.md`) — these are *merged* into `feature.spec.md`, not copied 1:1.
+2. **Filters out** source-only files (`.gitignore.additions` — consumed by `appendGitignore()` instead). Everything else under `templates/` is copied to the destination, including individual extension fragments — the `sdd` skill reads them on first invocation to merge the relevant ones into `feature.spec.md`.
 3. Reads each remaining file, runs `applyPlaceholders()` (`{{NAME}}` substitution; unknown placeholders are intentionally left untouched so the `sdd` skill can resolve them on first invocation).
 4. Special cases:
    - `README.md.tmpl` → renamed to `README.md` at destination.
