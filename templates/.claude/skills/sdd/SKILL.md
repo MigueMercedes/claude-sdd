@@ -50,7 +50,10 @@ If the project's `CLAUDE.md` has unresolved `{{PLACEHOLDERS}}` (recently scaffol
    | `public-api` | Project is a library (no top-level app entry, has `main`/`exports` in `package.json`, or publishes to npm/PyPI). |
 
    - Show the user the proposed list with one-line rationale per match: "Propose `persistent-data` because alembic/ exists." Ask which to enable. Default = all matches.
-   - For each confirmed extension, append the fragment from `specs/templates/extensions/<id>.md` into `specs/templates/feature.spec.md` immediately before the `## Review notes` heading. If a marker comment `<!-- Extensions enabled: ... -->` already exists, update its list; otherwise add it after the front-matter.
+   - For each confirmed extension, read the fragment at `specs/templates/extensions/<id>.md` and inject it into `specs/templates/feature.spec.md`. The merge:
+     - **Removes** the `## Optional sections (extensions)` heading and the placeholder bullets directly under it (everything from that heading up to the next `##` heading) — these are a hint for empty installs and become noise once real fragments land.
+     - Inserts the fragments in their place (concatenated, separated by blank lines).
+     - Updates the `<!-- Extensions enabled: ... -->` comment near the top if it exists, or adds one immediately after the `> **Mode**: ...` header line if not.
    - If no extensions match, say so and skip — `feature.spec.md` stays lean.
 
 4. If applicable, generate the first `docs/adr/0001-<area>.md` placeholder with the project context as a starting ADR
