@@ -112,6 +112,28 @@ describe('installTemplates', () => {
     expect(after).toContain('# CLAUDE.md — test-app');
   });
 
+  it('writes a .bak before overwriting an existing file', async () => {
+    const original = '# my custom CLAUDE.md\nlots of important content';
+    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), original);
+
+    await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'overwrite' });
+
+    const bak = await fs.readFile(path.join(tmpDir, 'CLAUDE.md.bak'), 'utf8');
+    expect(bak).toBe(original);
+  });
+
+  it('does NOT write a .bak when onConflict=skip', async () => {
+    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), '# kept');
+
+    await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'skip' });
+
+    const bakExists = await fs
+      .access(path.join(tmpDir, 'CLAUDE.md.bak'))
+      .then(() => true)
+      .catch(() => false);
+    expect(bakExists).toBe(false);
+  });
+
   it('does NOT copy .gitignore.additions to destination (it is a source-only file)', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS });
     const additionsCopied = await fs
