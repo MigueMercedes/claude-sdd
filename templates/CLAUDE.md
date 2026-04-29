@@ -109,9 +109,16 @@ your codebase. Common constraints to document:
 
 ## Available Skills
 
+`claude-sdd` ships exactly one skill:
+
 | Skill | When to use |
 |---|---|
 | `sdd` | Entry point for any non-trivial task — decides FULL/FAST/SHORT-CIRCUIT mode |
+
+If you also have the [`superpowers`](https://github.com/obra/superpowers) plugin installed, these companion skills pair well with the SDD pipeline. **They are optional** — `sdd` works without them by handling each step inline.
+
+| Skill (optional) | When to use |
+|---|---|
 | `superpowers:brainstorming` | Before generating non-trivial specs — explore requirements |
 | `superpowers:test-driven-development` | When applying test-first (services, endpoints, bug fixes) |
 | `superpowers:verification-before-completion` | Step 5 of pipeline — before claiming done |
