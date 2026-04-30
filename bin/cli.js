@@ -28,11 +28,12 @@ function printBanner() {
 function printNextSteps(repoUrl) {
   console.log('');
   console.log(kleur.bold('Next steps:'));
-  console.log('  1. Open Claude Code in this directory');
-  console.log('  2. Invoke ' + kleur.cyan('/sdd-init') + ' once — customizes CLAUDE.md by reading your codebase');
+  console.log('  1. Open your AI coding tool in this directory (Claude Code, Codex, Cursor, Gemini CLI, ...)');
+  console.log('  2. Invoke ' + kleur.cyan('/sdd-init') + ' once — customizes ' + kleur.bold('AGENTS.md') + ' by reading your codebase');
   console.log('  3. Use ' + kleur.cyan('/sdd') + ' from then on for any task that touches code');
   console.log('');
-  console.log(kleur.dim('Tip: re-invoke /sdd-init later if your stack drifts or CLAUDE.md feels stale.'));
+  console.log(kleur.dim('Tip: AGENTS.md is the single source of truth. CLAUDE.md is a shim that points to it.'));
+  console.log(kleur.dim('Tip: re-invoke /sdd-init later if your stack drifts or AGENTS.md feels stale.'));
   console.log(kleur.dim('Docs: ' + repoUrl));
   console.log('');
 }

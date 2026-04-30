@@ -74,11 +74,11 @@ CLI flags (e.g. `--extensions`) override prompted answers when both are given.
 - **Keep deps minimal.** Three runtime deps only: `commander`, `kleur`, `prompts`. Adding a fourth needs justification — the README explicitly defends recognizability-over-purity here. Don't reach for utility libs casually.
 - **JS + JSDoc, not TypeScript.** All source files have `// @ts-check` and JSDoc types. Don't introduce a TS toolchain — this is a deliberate simplicity choice (README "Why JavaScript (not TypeScript)").
 - **ESM only.** `import`, not `require` (except via `createRequire` for `package.json`).
-- **`templates/` files are user-facing.** Editing `templates/CLAUDE.md`, the `SPEC_PIPELINE.md`, or any prompt under `templates/specs/prompts/` changes what users get on `init`. Review those edits with the same care as a public API change.
+- **`templates/` files are user-facing.** Editing `templates/AGENTS.md` (canonical context), `templates/CLAUDE.md` (shim), `SPEC_PIPELINE.md`, or any prompt under `templates/specs/prompts/` changes what users get on `init`. Review those edits with the same care as a public API change.
 - **Smoke tests are part of CI.** `.github/workflows/ci.yml` runs three end-to-end smoke checks (lean install, with-extensions, invalid-extension-rejection) across Node 18/20/22. If you change install behavior, mirror the change in the workflow's grep assertions.
 - **Pre-1.0, distributed via git URL** (`npx github:MigueMercedes/claude-sdd`). The package is not on npm yet; do not bump for "release" purposes — version bumps in `package.json` are tracked but unpublished.
 
 ## What lives where
 
-- The Pragmatic SDD philosophy (FULL/FAST/SHORT-CIRCUIT modes, Selective TDD, Spec-vs-ADR, extension catalog) is documented in **`README.md`** and reproduced in the templates that get installed (`templates/CLAUDE.md`, `templates/SPEC_PIPELINE.md`, `templates/.claude/skills/sdd/SKILL.md`, `templates/.claude/skills/sdd-init/SKILL.md`). When the philosophy changes, those five places need to stay aligned.
+- The Pragmatic SDD philosophy (FULL/FAST/SHORT-CIRCUIT modes, Selective TDD, Spec-vs-ADR, extension catalog) is documented in **`README.md`** and reproduced in the templates that get installed (`templates/AGENTS.md`, `templates/SPEC_PIPELINE.md`, `templates/.claude/skills/sdd/SKILL.md`, `templates/.claude/skills/sdd-init/SKILL.md`). When the philosophy changes, those five places need to stay aligned. `templates/CLAUDE.md` is a thin shim and rarely needs updates beyond the pointer.
 - **This** `CLAUDE.md` is for working *on* the scaffolder, not *with* it. The SDD pipeline (specs, ADRs, etc.) is **not** applied to changes inside this repo — there is no `specs/` directory here, and code changes are reviewed conventionally via PR.

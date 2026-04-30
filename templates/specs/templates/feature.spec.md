@@ -41,7 +41,7 @@ Anything that changes outside the immediate return value: persisted writes, noti
 
 ## Testing strategy
 
-Aligned with Selective TDD from CLAUDE.md:
+Aligned with Selective TDD from AGENTS.md:
 - **Unit tests**: which pure functions / services get tested (test-first)
 - **Integration tests**: which boundaries get tested (test-first)
 - **E2E tests**: which user flow gets browser/CLI automation (if applicable)

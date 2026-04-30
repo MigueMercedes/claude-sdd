@@ -7,7 +7,7 @@ You are a staff engineer reviewing a spec before implementation. Your job is to 
 Read:
 - The spec to review
 - Vigent ADRs in `docs/adr/`
-- `CLAUDE.md` (root)
+- `AGENTS.md` (root)
 - Related specs in `specs/features/` of the same area (consistency)
 - Active extensions in your project (see `specs/templates/extensions/README.md`)
 

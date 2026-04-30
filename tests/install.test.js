@@ -29,7 +29,8 @@ describe('installTemplates', () => {
     await installTemplates({ cwd: tmpDir, vars: VARS });
 
     const expectedFiles = [
-      'CLAUDE.md',
+      'AGENTS.md', // canonical AI-assistant context
+      'CLAUDE.md', // shim pointing to AGENTS.md (Claude Code)
       'SPEC_PIPELINE.md',
       'README.md', // renamed from .tmpl
       'TASKS.md',
@@ -69,26 +70,34 @@ describe('installTemplates', () => {
     expect(readmeExists).toBe(true);
   });
 
-  it('replaces placeholders with provided vars', async () => {
+  it('replaces placeholders with provided vars in AGENTS.md', async () => {
     await installTemplates({ cwd: tmpDir, vars: VARS });
-    const claudeMd = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
-    expect(claudeMd).toContain('# CLAUDE.md — test-app');
-    expect(claudeMd).toContain('**Stack**: Node.js');
-    expect(claudeMd).not.toContain('{{PROJECT_NAME}}');
-    expect(claudeMd).not.toContain('{{STACK}}');
+    const agentsMd = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    expect(agentsMd).toContain('# test-app');
+    expect(agentsMd).toContain('**Stack**: Node.js');
+    expect(agentsMd).not.toContain('{{PROJECT_NAME}}');
+    expect(agentsMd).not.toContain('{{STACK}}');
   });
 
-  it('leaves free-form placeholders unresolved when not provided', async () => {
+  it('CLAUDE.md is a thin shim pointing to AGENTS.md', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const claudeMd = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
+    expect(claudeMd).toContain('AGENTS.md');
+    // Shim should be small — under 20 lines is plenty
+    expect(claudeMd.split('\n').length).toBeLessThan(20);
+  });
+
+  it('leaves free-form placeholders unresolved in AGENTS.md when not provided', async () => {
     // Mirrors what bin/cli.js passes: only the deterministic placeholders.
-    // The sdd skill detects unresolved {{X}} as "first-time setup needed".
+    // The sdd-init skill detects unresolved {{X}} as "first-time setup needed".
     await installTemplates({
       cwd: tmpDir,
       vars: { PROJECT_NAME: 'test-app', STACK: 'Node.js' },
     });
-    const claudeMd = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
-    expect(claudeMd).toContain('{{PROJECT_DESCRIPTION}}');
-    expect(claudeMd).toContain('{{REPO_LAYOUT}}');
-    expect(claudeMd).toContain('{{CONSTRAINTS}}');
+    const agentsMd = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    expect(agentsMd).toContain('{{PROJECT_DESCRIPTION}}');
+    expect(agentsMd).toContain('{{REPO_LAYOUT}}');
+    expect(agentsMd).toContain('{{CONSTRAINTS}}');
   });
 
   it('skipOnly mode installs all .claude/skills/ entries and nothing else', async () => {
@@ -111,44 +120,50 @@ describe('installTemplates', () => {
       .then(() => true)
       .catch(() => false);
     expect(claudeExists, 'CLAUDE.md should NOT exist in skill-only mode').toBe(false);
+
+    const agentsExists = await fs
+      .access(path.join(tmpDir, 'AGENTS.md'))
+      .then(() => true)
+      .catch(() => false);
+    expect(agentsExists, 'AGENTS.md should NOT exist in skill-only mode').toBe(false);
   });
 
   it('skips existing files by default (onConflict=skip)', async () => {
-    const userClaude = '# My existing CLAUDE.md\nDo not overwrite me.';
-    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), userClaude);
+    const userAgents = '# My existing AGENTS.md\nDo not overwrite me.';
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), userAgents);
 
     await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'skip' });
 
-    const after = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
-    expect(after).toBe(userClaude);
+    const after = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    expect(after).toBe(userAgents);
   });
 
   it('overwrites existing files when onConflict=overwrite', async () => {
-    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), '# old');
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# old');
 
     await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'overwrite' });
 
-    const after = await fs.readFile(path.join(tmpDir, 'CLAUDE.md'), 'utf8');
-    expect(after).toContain('# CLAUDE.md — test-app');
+    const after = await fs.readFile(path.join(tmpDir, 'AGENTS.md'), 'utf8');
+    expect(after).toContain('# test-app');
   });
 
   it('writes a .bak before overwriting an existing file', async () => {
-    const original = '# my custom CLAUDE.md\nlots of important content';
-    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), original);
+    const original = '# my custom AGENTS.md\nlots of important content';
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), original);
 
     await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'overwrite' });
 
-    const bak = await fs.readFile(path.join(tmpDir, 'CLAUDE.md.bak'), 'utf8');
+    const bak = await fs.readFile(path.join(tmpDir, 'AGENTS.md.bak'), 'utf8');
     expect(bak).toBe(original);
   });
 
   it('does NOT write a .bak when onConflict=skip', async () => {
-    await fs.writeFile(path.join(tmpDir, 'CLAUDE.md'), '# kept');
+    await fs.writeFile(path.join(tmpDir, 'AGENTS.md'), '# kept');
 
     await installTemplates({ cwd: tmpDir, vars: VARS, onConflict: 'skip' });
 
     const bakExists = await fs
-      .access(path.join(tmpDir, 'CLAUDE.md.bak'))
+      .access(path.join(tmpDir, 'AGENTS.md.bak'))
       .then(() => true)
       .catch(() => false);
     expect(bakExists).toBe(false);

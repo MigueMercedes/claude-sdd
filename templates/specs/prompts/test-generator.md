@@ -8,7 +8,7 @@ Read:
 - The final spec (post-review)
 - Existing tests of the affected module — pattern to follow
 - Test setup files (`conftest.py`, `vitest.setup.ts`, `jest.config.js`, etc.)
-- `CLAUDE.md` § Testing setup
+- `AGENTS.md` § Testing setup
 
 ## Selective TDD applied
 

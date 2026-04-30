@@ -25,7 +25,11 @@ jobs:
           TMP=$(mktemp -d)
           cd "$TMP"
           node ${{ github.workspace }}/bin/cli.js init --yes --project-name "ci-test" --stack node
+          test -f AGENTS.md
           test -f CLAUDE.md
+          # CLAUDE.md must be a thin shim pointing to AGENTS.md (under 20 lines)
+          [ "$(wc -l < CLAUDE.md)" -lt 20 ]
+          grep -q "AGENTS.md" CLAUDE.md
           test -f SPEC_PIPELINE.md
           test -f .claude/skills/sdd/SKILL.md
           test -f .claude/skills/sdd-init/SKILL.md
@@ -33,7 +37,7 @@ jobs:
           test ! -f .gitignore.additions
           test -f specs/templates/extensions/multi-tenant.md
           test -f specs/templates/extensions/persistent-data.md
-          ! grep -q "{{PROJECT_NAME}}" CLAUDE.md
+          ! grep -q "{{PROJECT_NAME}}" AGENTS.md
           ! grep -q "## Multi-tenant boundary" specs/templates/feature.spec.md
           echo "Lean smoke OK"
 

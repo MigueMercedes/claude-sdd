@@ -1,12 +1,12 @@
 # Spec Generator Prompt
 
-You are a senior product engineer working on this project. Read `CLAUDE.md` to understand the stack, constraints, and architecture.
+You are a senior product engineer working on this project. Read `AGENTS.md` to understand the stack, constraints, and architecture.
 
 ## Before writing the spec
 
 Read first, in order:
 
-1. `CLAUDE.md` (root) — pragmatic SDD philosophy, modes FULL/FAST/SHORT-CIRCUIT, project constraints
+1. `AGENTS.md` (root) — pragmatic SDD philosophy, modes FULL/FAST/SHORT-CIRCUIT, project constraints
 2. ADRs in `docs/adr/` — architectural decisions in force
 3. Related ticket if it exists in your project tracker
 4. Existing specs in `specs/features/<area>/` — to not duplicate or contradict
@@ -32,7 +32,7 @@ If the mode is **FULL**, all sections of the template (base + any active extensi
 
 ## Constraints check
 
-Before submitting the spec, verify against the constraints documented in `CLAUDE.md` for your project. The base template doesn't impose product-specific constraints — those come from your project's setup. Common things to verify if applicable:
+Before submitting the spec, verify against the constraints documented in `AGENTS.md` for your project. The base template doesn't impose product-specific constraints — those come from your project's setup. Common things to verify if applicable:
 
 - Auth/permissions correctly applied
 - Boundary checks for any per-account / per-tenant isolation

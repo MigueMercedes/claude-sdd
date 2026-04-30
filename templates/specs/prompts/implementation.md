@@ -7,16 +7,16 @@ You are a staff engineer implementing a feature. You implement **only from the s
 Read:
 - Final spec at `specs/features/<area>/<slug>.spec.md`
 - Generated tests (already written, failing if test-first)
-- `CLAUDE.md` for project conventions and architecture
+- `AGENTS.md` for project conventions and architecture
 - Vigent ADRs in `docs/adr/`
 - Applicable skills identified in review
 
 ## Hard rules
 
 - **Do not add logic outside the spec**. If you find an unspecified case, mark `// TODO(spec): <concrete question>` in the code and stop the flow. Ask the spec author.
-- **Respect project architecture** documented in CLAUDE.md (layered, modular, etc.)
+- **Respect project architecture** documented in AGENTS.md (layered, modular, etc.)
 - **Do not contradict ADRs**. If your implementation requires contradicting an ADR, write a new ADR FIRST with explicit tradeoffs.
-- **Naming conventions** as documented in CLAUDE.md
+- **Naming conventions** as documented in AGENTS.md
 - **Style/format** matching project linter config
 - **Localization** as per project (language of error messages, dates, etc.)
 
@@ -38,7 +38,7 @@ Diff implementing the spec. Structure depends on stack but typically:
 4. **API surface changes** (endpoints, handlers)
 5. **UI changes** (components, pages, hooks)
 6. **Test changes** (if requirements changed during impl)
-7. **Docs changes** (CLAUDE.md update if introduces new convention)
+7. **Docs changes** (AGENTS.md update if introduces new convention)
 
 After the code, output a summary:
 - Files modified (paths)

@@ -1,6 +1,6 @@
 # SPEC_PIPELINE.md — Process
 
-Process doc for the SDD pipeline. For philosophy and when to use the pipeline, see [CLAUDE.md](./CLAUDE.md).
+Process doc for the SDD pipeline. For philosophy and when to use the pipeline, see [AGENTS.md](./AGENTS.md).
 
 ---
 
@@ -83,7 +83,7 @@ flowchart TD
 
 **Prompt**: `specs/prompts/test-generator.md`.
 
-**Selective TDD applied** (from CLAUDE.md):
+**Selective TDD applied** (from AGENTS.md):
 
 | Type of change | Action |
 |---|---|
@@ -94,7 +94,7 @@ flowchart TD
 | UI component / page | Code-first — implement, add tests if reusable logic |
 | Any change in tested module | Update tests in same commit |
 
-**Setup**: depends on your stack. Document in `CLAUDE.md` the test runner, fixtures location, async patterns, and any polyfills/mocks used.
+**Setup**: depends on your stack. Document in `AGENTS.md` the test runner, fixtures location, async patterns, and any polyfills/mocks used.
 
 ---
 
@@ -105,10 +105,10 @@ flowchart TD
 **Prompt**: `specs/prompts/implementation.md`.
 
 **Rules**:
-- Respect your project architecture (documented in CLAUDE.md)
+- Respect your project architecture (documented in AGENTS.md)
 - Do not introduce logic outside the spec — if you find an unspecified case, mark `// TODO(spec): <question>` and stop. Ask spec author.
 - Vigent ADRs are ground truth — do not contradict without writing a new ADR
-- Conventions in CLAUDE.md are mandatory
+- Conventions in AGENTS.md are mandatory
 
 **If you find drift between spec and reality**: update the spec in the same commit. Do not let code and spec diverge.
 

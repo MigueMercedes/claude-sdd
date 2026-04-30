@@ -36,7 +36,7 @@ npx github:MigueMercedes/claude-sdd init
 
 ## Why SDD?
 
-AI-assisted coding has a tax: agents need context to be useful. The first 30 minutes of every new session is "remind the agent of conventions, architecture, why we made decision X". Most teams solve this with `CLAUDE.md` files — but those grow into 500-line walls of text that nobody updates and the agent skims.
+AI-assisted coding has a tax: agents need context to be useful. The first 30 minutes of every new session is "remind the agent of conventions, architecture, why we made decision X". Most teams solve this with a per-tool context file (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.cursor/rules/`...) — but those grow into 500-line walls of text that nobody updates and the agent skims.
 
 **Spec-Driven Development** flips that: the spec for each feature is the source of truth. The agent reads the spec, knows exactly what to build, and writes tests against the spec — not against its assumption of what you meant.
 
@@ -68,13 +68,19 @@ npx github:MigueMercedes/claude-sdd init
 
 If you run `init` inside an existing project (manifest or `.git/` detected), the CLI skips the questions and only asks for one confirmation — stack and extensions are detected by the `sdd` skill on first invocation. In an empty directory the original 5-question flow runs. Use `--ask` to force the interactive flow regardless of detection. Either way, **existing files are never overwritten by default.**
 
-Then open Claude Code in the same directory and invoke the setup skill:
+Then open your AI coding tool in the same directory. The framework writes:
+- **`AGENTS.md`** — canonical AI-assistant context, [cross-tool standard](https://agents.md). Codex, Cursor (fallback), and AGENTS.md-aware tools read this directly.
+- **`CLAUDE.md`** — thin shim that points to `AGENTS.md`. Claude Code reads this and follows the pointer.
+
+If you're using Claude Code, invoke the setup skill:
 
 ```
 > /sdd-init
 ```
 
-`sdd-init` reads your codebase, fills the placeholders in `CLAUDE.md` (stack, repo layout, constraints), and proposes which extensions apply. From then on, every non-trivial task starts with `/sdd` to classify the work — it orchestrates the spec → tests → implement → verify pipeline. Re-invoke `/sdd-init` later if your stack drifts or `CLAUDE.md` feels stale.
+`sdd-init` reads your codebase, fills the placeholders in `AGENTS.md` (stack, repo layout, constraints), and proposes which extensions apply. From then on, every non-trivial task starts with `/sdd` to classify the work — it orchestrates the spec → tests → implement → verify pipeline. Re-invoke `/sdd-init` later if your stack drifts or `AGENTS.md` feels stale.
+
+Other tools without a skill mechanism (Codex, Aider, plain Cursor) still benefit: the spec templates, ADR conventions, and the `AGENTS.md` content all work as plain markdown context. You drive the SDD pipeline manually.
 
 ## End-to-end walk-through
 
@@ -204,7 +210,8 @@ Total time: half a day to a day depending on scope. Spec ends up being the desig
 
 ```
 your-project/
-├── CLAUDE.md                       # Pragmatic SDD philosophy + project constraints (you fill via skill)
+├── AGENTS.md                       # Canonical AI-assistant context (cross-tool standard)
+├── CLAUDE.md                       # Thin shim → AGENTS.md (Claude Code reads this)
 ├── SPEC_PIPELINE.md                # Process detail with mermaid flow + per-step checklists
 ├── README.md                       # If missing — skeleton with your project name
 ├── TASKS.md                        # Lightweight ticket dashboard
@@ -320,7 +327,7 @@ The framework opts out of dogmatic "always test first." Different code types des
 | UI components / pages | **Code-first** (implement visual, test if logic reusable) |
 | Any change to a tested module | **Update tests in same commit** |
 
-This sits in `CLAUDE.md` after install. The `test-generator.md` prompt enforces it.
+This sits in `AGENTS.md` after install. The `test-generator.md` prompt enforces it.
 
 ## Install options
 
@@ -337,7 +344,7 @@ npx github:MigueMercedes/claude-sdd init --yes \
   --stack node \
   --extensions multi-tenant,persistent-data,operational
 
-# Skill only (you already have a CLAUDE.md you don't want touched)
+# Skill only (skip docs, only refresh the .claude/skills/ folder)
 npx github:MigueMercedes/claude-sdd init --skill-only
 
 # Overwrite existing files
@@ -354,7 +361,7 @@ npx github:MigueMercedes/claude-sdd init --ask
 
 `node` · `python` · `rust` · `go` · `mixed` · `other`
 
-The stack value is informational — it shows up in `CLAUDE.md` as `**Stack**: <X>` and `sdd-init` uses it as a hint for things like test runner conventions during the customization pass. It's not enforcing anything.
+The stack value is informational — it shows up in `AGENTS.md` as `**Stack**: <X>` and `sdd-init` uses it as a hint for things like test runner conventions during the customization pass. It's not enforcing anything.
 
 ## The skills
 
@@ -362,16 +369,16 @@ The stack value is informational — it shows up in `CLAUDE.md` as `**Stack**: <
 
 ### `sdd-init` — project context (one-time + refresh)
 
-Customizes the scaffolded `CLAUDE.md` so it actually describes your project.
+Customizes the scaffolded `AGENTS.md` so it actually describes your project.
 
 **Mode A — first-time setup** (run once after `claude-sdd init`):
 - Reads the codebase to detect language, framework, test runner, deploy target
-- Replaces `{{PROJECT_NAME}}`, `{{STACK}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}` placeholders in `CLAUDE.md`
+- Replaces `{{PROJECT_NAME}}`, `{{STACK}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}` placeholders in `AGENTS.md`
 - Asks 3-4 questions about product-specific constraints (auth provider? notification channels? compliance?)
 - Detects which spec extensions apply via explicit heuristics and proposes them
 - Optionally generates the first ADR placeholder with project context
 
-**Mode B — refresh** (run anytime CLAUDE.md feels stale):
+**Mode B — refresh** (run anytime AGENTS.md feels stale):
 - Detects technical drift: stack changed, new top-level directories, deps that materially changed constraints
 - Detects bloat: sections duplicating README, generic best-practice noise, content that belongs in ADRs/runbooks
 - Reports both, asks the user how to proceed (full improvement / drift-only / per-item review). Default is conservative — drift only.
@@ -382,11 +389,11 @@ Customizes the scaffolded `CLAUDE.md` so it actually describes your project.
 This is where the framework earns its keep at the per-task level.
 
 - Classifies the task: FULL / FAST / SHORT-CIRCUIT
-- Loads the relevant context files (CLAUDE.md, ADRs, related specs)
+- Loads the relevant context files (AGENTS.md, ADRs, related specs)
 - Walks through the corresponding pipeline
 - Outputs in the standardized format (FINAL SPEC → REVIEW → TESTS → IMPL → VERIFY)
 - At the end, invokes the verification skill if you have `superpowers:verification-before-completion` installed
-- If `sdd` sees unresolved `{{PLACEHOLDERS}}` in `CLAUDE.md`, it tells the user to run `/sdd-init` first instead of trying to do that work itself.
+- If `sdd` sees unresolved `{{PLACEHOLDERS}}` in `AGENTS.md`, it tells the user to run `/sdd-init` first instead of trying to do that work itself.
 
 ### When NOT to invoke
 
@@ -418,9 +425,9 @@ Yes. Clone the repo, run `node /path/to/claude-sdd/bin/cli.js init` in your proj
 
 ### Does this work in monorepos?
 
-Yes. Run `init` in the root of your monorepo. The skill detects the multi-package layout during first setup and adapts the `CLAUDE.md` repo map. Each subpackage can optionally have its own thin `CLAUDE.md` referencing the root (the same pattern AgenClic uses internally).
+Yes. Run `init` in the root of your monorepo. The skill detects the multi-package layout during first setup and adapts the `AGENTS.md` repo map. Each subpackage can optionally have its own thin `AGENTS.md` referencing the root (the same pattern AgenClic uses internally).
 
-### What if I already have a `CLAUDE.md`?
+### What if I already have a `CLAUDE.md` or `AGENTS.md`?
 
 The CLI doesn't overwrite by default. You get prompted per file. Use `--skill-only` to install just the skill without touching your existing docs, and integrate the SDD pipeline incrementally.
 
@@ -446,7 +453,7 @@ Yes — MIT licensed. Use commercially without attribution required.
 
 It's pre-1.0 and being battle-tested in the author's projects. Public npm release once the API is stable enough that we won't be making breaking changes weekly. Until then, `npx github:MigueMercedes/claude-sdd` works just as well.
 
-### How is this different from just adding "always write specs first" to my CLAUDE.md?
+### How is this different from just adding "always write specs first" to my AGENTS.md / CLAUDE.md?
 
 Three things:
 1. **Escape hatches.** "Always" rules get ignored. Pragmatic SDD has explicit modes and the skill picks them automatically.
@@ -482,7 +489,7 @@ npm config set https-proxy http://proxy.example.com:8080
 
 If you're on Node <18, upgrade. The package requires Node 18+.
 
-### My `CLAUDE.md` still has `{{PLACEHOLDERS}}` after running the skill
+### My `AGENTS.md` still has `{{PLACEHOLDERS}}` after running the skill
 
 You probably ran `/sdd` instead of `/sdd-init`. `/sdd` is for tasks; `/sdd-init` is what fills the placeholders. Run `/sdd-init` once. If `sdd-init` failed midway (e.g. you cancelled), invoke it again — it's idempotent.
 
@@ -502,13 +509,13 @@ If you want CI to pass before integrating, run `--skill-only` and integrate the 
 
 ### I want to remove claude-sdd
 
-Delete the files: `CLAUDE.md`, `SPEC_PIPELINE.md`, `specs/`, `docs/adr/`, `docs/runbooks/`, `.claude/skills/sdd/`, `.claude/skills/sdd-init/`. There's no install registry to clean — the package only writes files, doesn't add dependencies to your project's `package.json`.
+Delete the files: `AGENTS.md`, `CLAUDE.md`, `SPEC_PIPELINE.md`, `specs/`, `docs/adr/`, `docs/runbooks/`, `.claude/skills/sdd/`, `.claude/skills/sdd-init/`. There's no install registry to clean — the package only writes files, doesn't add dependencies to your project's `package.json`.
 
 ## Comparison to alternatives
 
 ### vs. Claude Code's built-in `/init`
 
-`/init` writes a single `CLAUDE.md` based on your codebase. claude-sdd writes that **plus** a complete SDD process (spec templates, prompts, ADR conventions, pipeline skill). Use `/init` if you just want a CLAUDE.md. Use claude-sdd if you want a process to follow.
+Claude Code's `/init` writes a single `CLAUDE.md` based on your codebase. claude-sdd writes a canonical `AGENTS.md` (cross-tool standard) **plus** a complete SDD process (spec templates, prompts, ADR conventions, pipeline skill). Use `/init` if you just want a context file for Claude Code only. Use claude-sdd if you want a tool-agnostic process to follow.
 
 ### vs. `feature-dev` skill
 
@@ -516,7 +523,7 @@ Delete the files: `CLAUDE.md`, `SPEC_PIPELINE.md`, `specs/`, `docs/adr/`, `docs/
 
 ### vs. Cursor rules
 
-Cursor rules are auto-loaded context. claude-sdd's `CLAUDE.md` plays a similar role for Claude Code. The rest (specs, prompts, skill, ADR templates) is independent of editor — it lives in your repo as plain markdown.
+Cursor rules are auto-loaded context for Cursor specifically. claude-sdd's `AGENTS.md` plays the same role across tools (Claude Code, Codex, Gemini CLI, Cursor as fallback). The rest (specs, prompts, skill, ADR templates) is independent of editor — it lives in your repo as plain markdown.
 
 ### vs. classical TDD docs
 

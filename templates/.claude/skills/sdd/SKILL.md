@@ -20,9 +20,9 @@ This skill is the entry point of the SDD flow for individual tasks. Invoke it wh
 
 ## Pre-check: is the project context set up?
 
-Before classifying any task, glance at `CLAUDE.md`. If it still contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}`), the project was recently scaffolded by `claude-sdd init` but the per-project context was never filled in. Tell the user:
+Before classifying any task, glance at `AGENTS.md`. If it still contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}`), the project was recently scaffolded by `claude-sdd init` but the per-project context was never filled in. Tell the user:
 
-> Your `CLAUDE.md` still has unresolved placeholders. Run `/sdd-init` first to customize it for this project — I can pick up the task right after.
+> Your `AGENTS.md` still has unresolved placeholders. Run `/sdd-init` first to customize it for this project — I can pick up the task right after.
 
 The `sdd-init` skill handles first-time setup (and later refreshes). Don't try to do that work from inside `sdd` — keep this skill focused on task orchestration.
 
@@ -68,7 +68,7 @@ Does the change touch user-observable behavior?
 
 Regardless of mode, read BEFORE touching code:
 
-1. **`CLAUDE.md`** — SDD philosophy, escape hatches, repo map, project constraints
+1. **`AGENTS.md`** — SDD philosophy, escape hatches, repo map, project constraints
 2. **ADRs in `docs/adr/`** if your change touches active architectural patterns
 3. **Existing specs** in `specs/features/<area>/` of the affected area (consistency, no-duplication)
 4. **`TASKS.md`** if there is an associated ticket

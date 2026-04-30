@@ -1,14 +1,14 @@
 ---
 name: sdd-init
-description: Customize or refresh the SDD project context for this repo — fills the scaffolded CLAUDE.md placeholders by reading the codebase, proposes extensions, and audits CLAUDE.md for drift and bloat. Invoke after `claude-sdd init`, or anytime the project context needs updating (stack changed, new top-level dirs, CLAUDE.md feels stale).
+description: Customize or refresh the SDD project context for this repo — fills the scaffolded AGENTS.md placeholders by reading the codebase, proposes extensions, and audits AGENTS.md for drift and bloat. Invoke after `claude-sdd init`, or anytime the project context needs updating (stack changed, new top-level dirs, AGENTS.md feels stale).
 ---
 
 # SDD Init
 
-Sibling of the `sdd` skill. Where `sdd` orchestrates the SDD pipeline for individual tasks, `sdd-init` keeps the **project-level context** (CLAUDE.md, extension selection, first ADR) accurate. Invoke this skill in two situations:
+Sibling of the `sdd` skill. Where `sdd` orchestrates the SDD pipeline for individual tasks, `sdd-init` keeps the **project-level context** (AGENTS.md, extension selection, first ADR) accurate. Invoke this skill in two situations:
 
-- **First-time setup** — right after `npx claude-sdd init`, when CLAUDE.md still has unresolved `{{PLACEHOLDERS}}`.
-- **Refresh** — anytime the user says CLAUDE.md feels stale, or after a significant change (stack swap, monorepo split, big dependency upgrade).
+- **First-time setup** — right after `npx claude-sdd init`, when AGENTS.md still has unresolved `{{PLACEHOLDERS}}`.
+- **Refresh** — anytime the user says AGENTS.md feels stale, or after a significant change (stack swap, monorepo split, big dependency upgrade).
 
 The `sdd` skill itself does not do this work — if it sees unresolved `{{PLACEHOLDERS}}` it tells the user to run `/sdd-init` first.
 
@@ -16,7 +16,7 @@ The `sdd` skill itself does not do this work — if it sees unresolved `{{PLACEH
 
 ## Mode A: First-time setup
 
-Trigger: `CLAUDE.md` contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`).
+Trigger: `AGENTS.md` contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`).
 
 ### Steps
 
@@ -27,7 +27,7 @@ Trigger: `CLAUDE.md` contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT
    - Linter / formatter
    - Deploy target (`Dockerfile`, `vercel.json`, `railway.toml`, `.github/workflows/`)
 
-2. **Replace placeholders** in `CLAUDE.md`:
+2. **Replace placeholders** in `AGENTS.md`:
    - `{{PROJECT_NAME}}` → from manifest or directory name
    - `{{PROJECT_DESCRIPTION}}` → ask the user briefly if unclear
    - `{{STACK}}` → detected from above
@@ -103,21 +103,21 @@ Trigger: user explicitly invokes the skill on a project that no longer has `{{PL
 
 ### What to detect
 
-Run two passes against the current state of the repo and the current `CLAUDE.md`:
+Run two passes against the current state of the repo and the current `AGENTS.md`:
 
 #### Pass 1 — Drift (technical accuracy)
 
-Compare what `CLAUDE.md` describes vs what the code actually shows:
+Compare what `AGENTS.md` describes vs what the code actually shows:
 
-- **Stack drift** — `package.json` / `pyproject.toml` / etc. have changed primary framework or major version since CLAUDE.md was written.
+- **Stack drift** — `package.json` / `pyproject.toml` / etc. have changed primary framework or major version since AGENTS.md was written.
 - **Layout drift** — top-level directories exist that are not in the Repo Layout section, or directories listed there no longer exist.
-- **Test runner drift** — `vitest.config` exists but CLAUDE.md says "jest", or vice versa.
+- **Test runner drift** — `vitest.config` exists but AGENTS.md says "jest", or vice versa.
 - **Deploy target drift** — `Dockerfile` / `vercel.json` / `railway.toml` appeared or disappeared.
 - **Constraints drift** — if a major dependency that materially changes constraints was added (e.g. `stripe` first appeared → billing constraint should be documented; `prisma` first appeared → DB schema constraint).
 
 #### Pass 2 — Bloat (does the agent benefit?)
 
-Flag sections of `CLAUDE.md` that an agent does not use. Be **conservative** — false positives erode trust. Only flag with high confidence:
+Flag sections of `AGENTS.md` that an agent does not use. Be **conservative** — false positives erode trust. Only flag with high confidence:
 
 | Pattern | Why flag |
 |---|---|
@@ -170,7 +170,7 @@ After the user picks:
 ### Out of scope for refresh
 
 - Re-running the constraints questionnaire from Mode A (those answers are user-supplied; do not regenerate without the user asking).
-- Touching `templates/CLAUDE.md` in the `claude-sdd` repo. This skill operates on the user's project's CLAUDE.md only.
+- Touching `templates/AGENTS.md` in the `claude-sdd` repo. This skill operates on the user's project's AGENTS.md only.
 - Changing `specs/features/<area>/*.spec.md` — those are owned by the SDD pipeline (`sdd` skill).
 
 ---
