@@ -34,9 +34,13 @@ Trigger: `CLAUDE.md` contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT
    - `{{REPO_LAYOUT}}` → tree of top-level directories with one-line description each
    - `{{CONSTRAINTS}}` → ask the user 3-4 questions about product-specific constraints (auth provider? notification channels? compliance? performance budgets? browser support?)
 
-3. **Detect & propose extensions.** Look at `specs/templates/feature.spec.md`:
-   - Check the `<!-- Extensions enabled: ... -->` comment near the top, if any.
-   - Run the heuristics below against the codebase. For each extension whose heuristic matches, propose it to the user.
+3. **Detect & propose extensions.** First check `specs/templates/feature.spec.md` for an existing `<!-- Extensions enabled: ... -->` comment near the top — if it exists with a non-empty list, the user already chose at install time via `--extensions`; respect their choice and skip this step.
+
+   Otherwise, run two passes and combine the results.
+
+   ### Pass 1 — code heuristics
+
+   For each extension, propose it if its heuristic matches anything in the codebase.
 
    | Extension | Heuristic — propose if any are true |
    |---|---|
@@ -47,12 +51,45 @@ Trigger: `CLAUDE.md` contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT
    | `external-deps` | Code calls third-party APIs (stripe, paddle, twilio, sendgrid) or has webhook handlers. |
    | `public-api` | Project is a library (no top-level app entry, has `main`/`exports` in `package.json`, or publishes to npm/PyPI). |
 
-   - Show the user the proposed list with one-line rationale per match: "Propose `persistent-data` because alembic/ exists." Ask which to enable. Default = all matches.
-   - For each confirmed extension, read the fragment at `specs/templates/extensions/<id>.md` and inject it into `specs/templates/feature.spec.md`. The merge:
-     - **Removes** the `## Optional sections (extensions)` heading and the placeholder bullets directly under it (everything from that heading up to the next `##` heading).
-     - Inserts the fragments in their place (concatenated, separated by blank lines).
-     - Updates the `<!-- Extensions enabled: ... -->` comment near the top if it exists, or adds one immediately after the `> **Mode**: ...` header line if not.
-   - If no extensions match, say so and skip — `feature.spec.md` stays lean.
+   ### Pass 2 — intent question
+
+   Heuristics only see what's already in code. New or empty projects produce zero matches; existing projects can have false negatives (e.g. paired `dryRun` + `environment` flags that the regex missed). Ask the user:
+
+   > **Tell me about the project in 1-2 short paragraphs:**
+   > - Who uses it? (one user? multiple paying customers/businesses?)
+   > - What persists? (database? files? nothing?)
+   > - What does it integrate with externally? (Stripe / Twilio / brokers / none?)
+   > - Production-grade with users, or scratch/personal?
+   > - Library published for others to consume, or app you operate?
+
+   Phrase the question more conversationally if Pass 1 already found matches: "I detected [X, Y] from the code. Anything you plan to build that wasn't visible yet?"
+
+   From the answer, infer additional extensions and remove false positives from Pass 1 (e.g. heuristic flagged `multi-tenant` because of an `account_id` column in an admin tool, but the user clarifies it's single-tenant — drop it).
+
+   ### Synthesis — propose final list
+
+   Show all candidate extensions with one-line rationale per item, and explicitly call out what was rejected and why:
+
+   ```
+   Proposed extensions:
+     ✓ multi-tenant      — businesses each have isolated portal data
+     ✓ persistent-data   — DB-backed (Postgres), migrations matter from day 1
+     ✓ external-deps     — Stripe + Twilio are critical paths
+     ✓ operational       — paying customers means alerts and runbooks pay off
+     ✗ production-rollout — early-stage; revisit once you have 5+ tenants
+     ✗ public-api        — SaaS, not a library
+   ```
+
+   Ask the user to confirm or adjust. Default = the ✓ list.
+
+   ### Apply
+
+   For each confirmed extension, read the fragment at `specs/templates/extensions/<id>.md` and inject it into `specs/templates/feature.spec.md`. The merge:
+   - **Removes** the `## Optional sections (extensions)` heading and the placeholder bullets directly under it (everything from that heading up to the next `##` heading).
+   - Inserts the fragments in their place (concatenated, separated by blank lines).
+   - Updates the `<!-- Extensions enabled: ... -->` comment near the top if it exists, or adds one immediately after the `> **Mode**: ...` header line if not.
+
+   If the user picks zero extensions, say so and skip — `feature.spec.md` stays lean.
 
 4. If applicable, generate the first `docs/adr/0001-<area>.md` placeholder with the project context as a starting ADR.
 
