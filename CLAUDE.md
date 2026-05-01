@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-`leanspec` is a tiny Node CLI (`npx github:MigueMercedes/leanspec init`) that scaffolds the **Pragmatic SDD** framework into another project. It writes a set of markdown templates plus two Claude Code skills under `.claude/skills/`: `sdd-init` (project context customization + refresh) and `sdd` (per-task pipeline). The CLI itself is inert glue — the active intelligence ships as those two skills, which are what get iterated on most.
+`pragspec` is a tiny Node CLI (`npx github:MigueMercedes/pragspec init`) that scaffolds the **Pragmatic SDD** framework into another project. It writes a set of markdown templates plus two Claude Code skills under `.claude/skills/`: `sdd-init` (project context customization + refresh) and `sdd` (per-task pipeline). The CLI itself is inert glue — the active intelligence ships as those two skills, which are what get iterated on most.
 
 Distinguish two things when working here:
 
@@ -22,8 +22,8 @@ npm run test:watch                          # vitest in watch mode
 npx vitest run tests/install.test.js -t "with multi-tenant extension"   # run a single test by name pattern
 
 # End-to-end smoke (mirrors what CI does)
-TMP=$(mktemp -d) && cd "$TMP" && node /home/miguemercedes/projects/leanspec/bin/cli.js init --yes --project-name "smoke" --stack node
-node /home/miguemercedes/projects/leanspec/bin/cli.js init --yes --extensions multi-tenant,persistent-data,operational
+TMP=$(mktemp -d) && cd "$TMP" && node /home/miguemercedes/projects/pragspec/bin/cli.js init --yes --project-name "smoke" --stack node
+node /home/miguemercedes/projects/pragspec/bin/cli.js init --yes --extensions multi-tenant,persistent-data,operational
 ```
 
 There is no lint or build step. The package ships as ESM source (`"type": "module"`, Node ≥18). No bundler. `bin/cli.js` is the executable entry.
@@ -42,7 +42,7 @@ There is no lint or build step. The package ships as ESM source (`"type": "modul
    - `specs/templates/feature.spec.md` → if extensions are selected, the `## Optional sections (extensions)` placeholder block is replaced with the concatenated fragments, preserving the `## Review notes` section at the bottom (the merge logic locates the next `## Review notes` heading and slices around it).
 5. Honors `onConflict: 'skip' | 'overwrite'` per-file. Default is `skip` — **existing files are never silently overwritten**.
 
-`appendGitignore()` is idempotent via the `# Added by leanspec` marker — re-running `init` will not duplicate lines.
+`appendGitignore()` is idempotent via the `# Added by pragspec` marker — re-running `init` will not duplicate lines.
 
 ### Extension catalog
 
@@ -76,7 +76,7 @@ CLI flags (e.g. `--extensions`) override prompted answers when both are given.
 - **ESM only.** `import`, not `require` (except via `createRequire` for `package.json`).
 - **`templates/` files are user-facing.** Editing `templates/AGENTS.md` (canonical context), `templates/CLAUDE.md` (shim), `SPEC_PIPELINE.md`, or any prompt under `templates/specs/prompts/` changes what users get on `init`. Review those edits with the same care as a public API change.
 - **Smoke tests are part of CI.** `.github/workflows/ci.yml` runs three end-to-end smoke checks (lean install, with-extensions, invalid-extension-rejection) across Node 18/20/22. If you change install behavior, mirror the change in the workflow's grep assertions.
-- **Pre-1.0, published to npm as `leanspec`**. Distributed via the registry (`npx leanspec`) with the git URL form (`npx github:MigueMercedes/leanspec`) as fallback for unpublished branches / forks. Bump `package.json` version per semver before each `npm publish`; while pre-1.0 we use minor bumps (0.x.0) for breaking changes and patch bumps (0.x.y) for everything else.
+- **Pre-1.0, published to npm as `pragspec`**. Distributed via the registry (`npx pragspec`) with the git URL form (`npx github:MigueMercedes/pragspec`) as fallback for unpublished branches / forks. Bump `package.json` version per semver before each `npm publish`; while pre-1.0 we use minor bumps (0.x.0) for breaking changes and patch bumps (0.x.y) for everything else.
 
 ## What lives where
 

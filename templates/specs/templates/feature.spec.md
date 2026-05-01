@@ -63,7 +63,7 @@ What is NOT in this feature but could be confused with it. Avoids scope creep in
 
 ## Optional sections (extensions)
 
-Some projects need additional sections beyond the universal ones above. If your project enabled extensions during `leanspec init` (or you want to add them now), append the corresponding sections from `specs/templates/extensions/` when they apply to this feature.
+Some projects need additional sections beyond the universal ones above. If your project enabled extensions during `pragspec init` (or you want to add them now), append the corresponding sections from `specs/templates/extensions/` when they apply to this feature.
 
 Common extensions:
 - `multi-tenant.md` — if your product isolates data per customer/account

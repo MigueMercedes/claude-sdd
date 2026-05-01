@@ -10,7 +10,7 @@ Read first, in order:
 2. ADRs in `docs/adr/` — architectural decisions in force
 3. Related ticket if it exists in your project tracker
 4. Existing specs in `specs/features/<area>/` — to not duplicate or contradict
-5. `specs/templates/feature.spec.md` — base sections (universal). If your project enabled extensions during `leanspec init`, they're already merged here. If not, see `specs/templates/extensions/README.md` for opt-in add-ons.
+5. `specs/templates/feature.spec.md` — base sections (universal). If your project enabled extensions during `pragspec init`, they're already merged here. If not, see `specs/templates/extensions/README.md` for opt-in add-ons.
 
 ## Rules
 

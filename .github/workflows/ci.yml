@@ -101,12 +101,12 @@ jobs:
           echo "$out" | grep -q "Nothing to do"
           echo "Update smoke OK"
 
-      - name: Smoke — update fails fast outside a leanspec project
+      - name: Smoke — update fails fast outside a pragspec project
         run: |
           TMP=$(mktemp -d)
           cd "$TMP"
           if node ${{ github.workspace }}/bin/cli.js update --yes 2>/dev/null; then
-            echo "ERROR: update should have failed in non-leanspec directory"
+            echo "ERROR: update should have failed in non-pragspec directory"
             exit 1
           fi
           echo "Update fail-fast OK"

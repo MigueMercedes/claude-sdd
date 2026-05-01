@@ -1,10 +1,10 @@
 {
-  "name": "leanspec",
+  "name": "pragspec",
   "version": "0.2.0",
   "description": "Pragmatic Spec-Driven Development — npm CLI that scaffolds the SDD pipeline (specs, prompts, skills, ADR/runbook conventions) into any project. Tool-agnostic via AGENTS.md.",
   "type": "module",
   "bin": {
-    "leanspec": "./bin/cli.js"
+    "pragspec": "./bin/cli.js"
   },
   "files": [
     "bin/",
@@ -35,11 +35,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MigueMercedes/leanspec.git"
+    "url": "git+https://github.com/MigueMercedes/pragspec.git"
   },
-  "homepage": "https://github.com/MigueMercedes/leanspec#readme",
+  "homepage": "https://github.com/MigueMercedes/pragspec#readme",
   "bugs": {
-    "url": "https://github.com/MigueMercedes/leanspec/issues"
+    "url": "https://github.com/MigueMercedes/pragspec/issues"
   },
   "dependencies": {
     "commander": "^12.1.0",

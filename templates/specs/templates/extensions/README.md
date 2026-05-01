@@ -17,10 +17,10 @@ The base `feature.spec.md` template covers what every spec needs. **Extensions**
 
 ### Option A — Project-wide (recommended)
 
-During `leanspec init`, select the extensions that apply to your project:
+During `pragspec init`, select the extensions that apply to your project:
 
 ```bash
-npx github:MigueMercedes/leanspec init --extensions multi-tenant,persistent-data
+npx github:MigueMercedes/pragspec init --extensions multi-tenant,persistent-data
 ```
 
 Or interactively (multi-select). The CLI appends the selected extension sections to `feature.spec.md` once, so every new spec inherits them.
@@ -37,7 +37,7 @@ cat specs/templates/extensions/persistent-data.md >> specs/features/auth/passwor
 
 You enabled the project but realized you need an extension. Two options:
 
-1. Re-run `leanspec init --skill-only --extensions <new-set>` (will re-prompt to overwrite `feature.spec.md`)
+1. Re-run `pragspec init --skill-only --extensions <new-set>` (will re-prompt to overwrite `feature.spec.md`)
 2. Manually paste the extension content into `feature.spec.md` and into specs that need it retroactively
 
 ## Adding your own extensions

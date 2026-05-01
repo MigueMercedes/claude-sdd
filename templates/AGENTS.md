@@ -2,7 +2,7 @@
 
 > AI-assistant context for this project. Single source of truth — Codex, Cursor (fallback), and other tools that follow the [`AGENTS.md`](https://agents.md) standard read this file directly. Tools that load their own filename (Claude Code → `CLAUDE.md`, Gemini CLI → `GEMINI.md`, Copilot → `.github/copilot-instructions.md`) are pointed here via short shim files.
 >
-> Scaffolded by [`leanspec`](https://github.com/MigueMercedes/leanspec). Customize the placeholders below, then invoke the `sdd-init` skill (Claude Code) or its equivalent in your tool to fill them by reading the codebase.
+> Scaffolded by [`pragspec`](https://github.com/MigueMercedes/pragspec). Customize the placeholders below, then invoke the `sdd-init` skill (Claude Code) or its equivalent in your tool to fill them by reading the codebase.
 
 ## Project Overview
 
@@ -111,7 +111,7 @@ your codebase. Common constraints to document:
 
 ## Available Skills
 
-`leanspec` ships two skills:
+`pragspec` ships two skills:
 
 | Skill | When to use |
 |---|---|

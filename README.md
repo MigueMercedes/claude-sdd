@@ -1,13 +1,13 @@
-# leanspec
+# pragspec
 
 > **Pragmatic Spec-Driven Development.** Scaffold a complete, opinionated SDD workflow into any project in 30 seconds. Tool-agnostic via the [`AGENTS.md`](https://agents.md) standard — works with Claude Code, Codex, Cursor, Gemini CLI. The smarts live in a Claude Code skill that decides FULL/FAST/SHORT-CIRCUIT mode for each task and orchestrates the pipeline.
 
-[![npm](https://img.shields.io/npm/v/leanspec.svg)](https://www.npmjs.com/package/leanspec)
+[![npm](https://img.shields.io/npm/v/pragspec.svg)](https://www.npmjs.com/package/pragspec)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ```bash
-npx leanspec init
+npx pragspec init
 ```
 
 ---
@@ -64,7 +64,7 @@ The `sdd` skill applies this decision tree automatically. You describe the task 
 In your project root:
 
 ```bash
-npx leanspec init
+npx pragspec init
 ```
 
 If you run `init` inside an existing project (manifest or `.git/` detected), the CLI skips the questions and only asks for one confirmation — stack and extensions are detected by the `sdd` skill on first invocation. In an empty directory the original 5-question flow runs. Use `--ask` to force the interactive flow regardless of detection. Either way, **existing files are never overwritten by default.**
@@ -287,7 +287,7 @@ The base 11 sections are universal. Anything else goes in **opt-in extensions** 
 **CLI flag (manual override):** pass `--extensions` to lock in choices at install time without waiting for the skill.
 
 ```bash
-npx leanspec init --extensions multi-tenant,persistent-data,operational
+npx pragspec init --extensions multi-tenant,persistent-data,operational
 ```
 
 **Per-spec:** if only some specs need a particular extension, copy the fragment into individual specs as needed.
@@ -334,33 +334,33 @@ This sits in `AGENTS.md` after install. The `test-generator.md` prompt enforces 
 
 ```bash
 # Interactive (recommended for first time)
-npx leanspec init
+npx pragspec init
 
 # Non-interactive with defaults (no extensions — lean base)
-npx leanspec init --yes
+npx pragspec init --yes
 
 # Explicit project name + stack + extensions
-npx leanspec init --yes \
+npx pragspec init --yes \
   --project-name "my-app" \
   --stack node \
   --extensions multi-tenant,persistent-data,operational
 
 # Skill only (skip docs, only refresh the .claude/skills/ folder)
-npx leanspec init --skill-only
+npx pragspec init --skill-only
 
 # Overwrite existing files
-npx leanspec init --overwrite
+npx pragspec init --overwrite
 
 # Skip .gitignore modification
-npx leanspec init --no-gitignore
+npx pragspec init --no-gitignore
 
 # Force the 5-question interactive flow even in an existing project
-npx leanspec init --ask
+npx pragspec init --ask
 
 # Update an existing installation (skills + AGENTS.md managed sections)
-npx leanspec update
-npx leanspec update --dry-run     # preview only
-npx leanspec update --yes         # non-interactive
+npx pragspec update
+npx pragspec update --dry-run     # preview only
+npx pragspec update --yes         # non-interactive
 ```
 
 ### Stacks supported by the picker
@@ -371,13 +371,13 @@ The stack value is informational — it shows up in `AGENTS.md` as `**Stack**: <
 
 ## The skills
 
-`leanspec` ships two skills with separate concerns:
+`pragspec` ships two skills with separate concerns:
 
 ### `sdd-init` — project context (one-time + refresh)
 
 Customizes the scaffolded `AGENTS.md` so it actually describes your project.
 
-**Mode A — first-time setup** (run once after `leanspec init`):
+**Mode A — first-time setup** (run once after `pragspec init`):
 - Reads the codebase to detect language, framework, test runner, deploy target
 - Replaces `{{PROJECT_NAME}}`, `{{STACK}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}` placeholders in `AGENTS.md`
 - Asks 3-4 questions about product-specific constraints (auth provider? notification channels? compliance?)
@@ -433,11 +433,11 @@ Templates are static. They can't say "your test framework is vitest, not jest, s
 
 ### Do I need Claude Code to use this?
 
-The CLI part (`npx leanspec init`) writes files that any AI assistant or human can read. But the skill — the part that automates mode classification and pipeline orchestration — only works inside Claude Code. Without Claude Code, you'd have to read `SPEC_PIPELINE.md` and apply the modes manually.
+The CLI part (`npx pragspec init`) writes files that any AI assistant or human can read. But the skill — the part that automates mode classification and pipeline orchestration — only works inside Claude Code. Without Claude Code, you'd have to read `SPEC_PIPELINE.md` and apply the modes manually.
 
 ### Can I use this without `npx`?
 
-Yes. `npm install -g leanspec` and then `leanspec init` works fine. Or clone the repo and run `node /path/to/leanspec/bin/cli.js init` directly.
+Yes. `npm install -g pragspec` and then `pragspec init` works fine. Or clone the repo and run `node /path/to/pragspec/bin/cli.js init` directly.
 
 ### Does this work in monorepos?
 
@@ -456,7 +456,7 @@ Yes — they're plain markdown files in `specs/prompts/` after install. Edit fre
 Run the `update` subcommand from the root of your project:
 
 ```bash
-npx leanspec update
+npx pragspec update
 ```
 
 It shows you a plan first (what will change), asks for confirmation, then applies. Every file it modifies gets a `.bak` next to it for safety.
@@ -471,10 +471,10 @@ What it never touches:
 Useful flags:
 
 ```bash
-npx leanspec update --dry-run        # show plan, write nothing
-npx leanspec update --yes            # non-interactive (CI / scripts)
-npx leanspec update --skills-only    # only refresh .claude/skills/
-npx leanspec update --docs-only      # only refresh the AGENTS.md section
+npx pragspec update --dry-run        # show plan, write nothing
+npx pragspec update --yes            # non-interactive (CI / scripts)
+npx pragspec update --skills-only    # only refresh .claude/skills/
+npx pragspec update --docs-only      # only refresh the AGENTS.md section
 ```
 
 If your `AGENTS.md` predates the `### Companion skills` sub-heading (very early adopters), `update` reports `manual-required` for that section without touching anything. Either edit AGENTS.md by hand to add the heading, or back it up and re-run `init --overwrite`.
@@ -483,12 +483,12 @@ If your `AGENTS.md` predates the `### Companion skills` sub-heading (very early 
 
 Yes — MIT licensed. Use commercially without attribution required.
 
-### Is `leanspec` stable?
+### Is `pragspec` stable?
 
 Pre-1.0 (currently 0.2.x). Public on npm, but the CLI surface and template content can still change between minor versions. Pin to a specific version if you want guaranteed reproducibility:
 
 ```bash
-npx leanspec@0.2.0 init
+npx pragspec@0.2.0 init
 ```
 
 ### How is this different from just adding "always write specs first" to my AGENTS.md / CLAUDE.md?
@@ -512,7 +512,7 @@ Skills under `.claude/skills/<name>/SKILL.md` are auto-discovered. Verify:
 ls -la .claude/skills/sdd/SKILL.md .claude/skills/sdd-init/SKILL.md
 ```
 
-If either is missing: re-run `npx leanspec init --skill-only`.
+If either is missing: re-run `npx pragspec init --skill-only`.
 
 If present but Claude Code doesn't show it: restart your Claude Code session. Skills are loaded at session start.
 
@@ -545,7 +545,7 @@ The CLI doesn't change CI configuration. If your CI now fails, it's because:
 
 If you want CI to pass before integrating, run `--skill-only` and integrate the templates manually after CI is set up to handle them.
 
-### I want to remove leanspec
+### I want to remove pragspec
 
 Delete the files: `AGENTS.md`, `CLAUDE.md`, `SPEC_PIPELINE.md`, `specs/`, `docs/adr/`, `docs/runbooks/`, `.claude/skills/sdd/`, `.claude/skills/sdd-init/`. There's no install registry to clean — the package only writes files, doesn't add dependencies to your project's `package.json`.
 
@@ -553,23 +553,23 @@ Delete the files: `AGENTS.md`, `CLAUDE.md`, `SPEC_PIPELINE.md`, `specs/`, `docs/
 
 ### vs. Claude Code's built-in `/init`
 
-Claude Code's `/init` writes a single `CLAUDE.md` based on your codebase. leanspec writes a canonical `AGENTS.md` (cross-tool standard) **plus** a complete SDD process (spec templates, prompts, ADR conventions, pipeline skill). Use `/init` if you just want a context file for Claude Code only. Use leanspec if you want a tool-agnostic process to follow.
+Claude Code's `/init` writes a single `CLAUDE.md` based on your codebase. pragspec writes a canonical `AGENTS.md` (cross-tool standard) **plus** a complete SDD process (spec templates, prompts, ADR conventions, pipeline skill). Use `/init` if you just want a context file for Claude Code only. Use pragspec if you want a tool-agnostic process to follow.
 
 ### vs. `feature-dev` skill
 
-`feature-dev` is a workflow for implementing one feature with codebase exploration. leanspec is a project-wide framework that includes feature-dev-style workflows but also covers bug fixes, refactors, hotfixes, and trivial changes — each with the right amount of process.
+`feature-dev` is a workflow for implementing one feature with codebase exploration. pragspec is a project-wide framework that includes feature-dev-style workflows but also covers bug fixes, refactors, hotfixes, and trivial changes — each with the right amount of process.
 
 ### vs. Cursor rules
 
-Cursor rules are auto-loaded context for Cursor specifically. leanspec's `AGENTS.md` plays the same role across tools (Claude Code, Codex, Gemini CLI, Cursor as fallback). The rest (specs, prompts, skill, ADR templates) is independent of editor — it lives in your repo as plain markdown.
+Cursor rules are auto-loaded context for Cursor specifically. pragspec's `AGENTS.md` plays the same role across tools (Claude Code, Codex, Gemini CLI, Cursor as fallback). The rest (specs, prompts, skill, ADR templates) is independent of editor — it lives in your repo as plain markdown.
 
 ### vs. classical TDD docs
 
-TDD says "test first." leanspec embraces **Selective TDD**: test-first for services and bug fixes, code-first for UI. The framework documents which strategy applies where, so the team doesn't argue about it per-PR.
+TDD says "test first." pragspec embraces **Selective TDD**: test-first for services and bug fixes, code-first for UI. The framework documents which strategy applies where, so the team doesn't argue about it per-PR.
 
 ### vs. RFC processes (Python PEPs, Rust RFCs, etc.)
 
-RFCs are heavyweight, public, and target large architectural changes. Specs in leanspec are lightweight, internal, and target individual features. ADRs in `docs/adr/` are the equivalent of RFCs for this framework.
+RFCs are heavyweight, public, and target large architectural changes. Specs in pragspec are lightweight, internal, and target individual features. ADRs in `docs/adr/` are the equivalent of RFCs for this framework.
 
 ## Architecture of this package
 
@@ -585,7 +585,7 @@ These three are the de facto standard for CLI UX in Node. Anyone reading the sou
 
 ### Why also keep the git URL invocation working?
 
-`npx github:MigueMercedes/leanspec init` works as a fallback, useful for testing PRs / branches / forks before they hit the npm registry, or for offline environments where the GitHub mirror is reachable but npm isn't.
+`npx github:MigueMercedes/pragspec init` works as a fallback, useful for testing PRs / branches / forks before they hit the npm registry, or for offline environments where the GitHub mirror is reachable but npm isn't.
 
 ### Why ESM (`"type": "module"`)
 
@@ -635,8 +635,8 @@ Pre-1.0, the API is moving. Issues and small PRs are welcome; large PRs should s
 ### Local development
 
 ```bash
-git clone https://github.com/MigueMercedes/leanspec
-cd leanspec
+git clone https://github.com/MigueMercedes/pragspec
+cd pragspec
 npm install
 npm test                        # 19 tests across CLI + extension composition
 node bin/cli.js init --yes      # smoke test in a temp dir

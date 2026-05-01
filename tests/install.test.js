@@ -9,7 +9,7 @@ import { installTemplates, appendGitignore, isExistingProject, EXTENSIONS, isVal
 let tmpDir;
 
 beforeEach(async () => {
-  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'leanspec-test-'));
+  tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pragspec-test-'));
 });
 
 afterEach(async () => {
@@ -243,7 +243,7 @@ describe('companion skill canonicalization', () => {
   it('AGENTS.md (template) and the framework README.md mention the same set of superpowers skills (sync guard)', async () => {
     // Sync between two PUBLIC surfaces of the framework:
     // - AGENTS.md installed in the user's project (the runtime canonical list)
-    // - README.md of the leanspec repo (what users read on GitHub before installing)
+    // - README.md of the pragspec repo (what users read on GitHub before installing)
     // Both must agree on which companion skills the framework references.
     // The user's own project README (templates/README.md.tmpl → README.md at destination)
     // is intentionally NOT in this guard — it's the user's surface and stays clean.
@@ -350,7 +350,7 @@ describe('appendGitignore', () => {
     const result = await appendGitignore(tmpDir);
     expect(result.added).toBe(true);
     const content = await fs.readFile(result.path, 'utf8');
-    expect(content).toContain('# Added by leanspec');
+    expect(content).toContain('# Added by pragspec');
     expect(content).toContain('.claude/settings.local.json');
   });
 
@@ -362,13 +362,13 @@ describe('appendGitignore', () => {
     expect(result.added).toBe(true);
     const content = await fs.readFile(result.path, 'utf8');
     expect(content).toContain(existing);
-    expect(content).toContain('# Added by leanspec');
+    expect(content).toContain('# Added by pragspec');
   });
 
   it('is idempotent (skips if marker present)', async () => {
     await fs.writeFile(
       path.join(tmpDir, '.gitignore'),
-      'node_modules/\n# Added by leanspec\n.scratch/\n'
+      'node_modules/\n# Added by pragspec\n.scratch/\n'
     );
     const result = await appendGitignore(tmpDir);
     expect(result.added).toBe(false);

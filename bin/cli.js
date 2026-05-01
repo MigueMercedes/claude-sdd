@@ -21,7 +21,7 @@ const STACK_LABELS = {
 
 function printBanner() {
   console.log('');
-  console.log(kleur.bold().magenta('  leanspec ') + kleur.dim(`v${pkg.version}`));
+  console.log(kleur.bold().magenta('  pragspec ') + kleur.dim(`v${pkg.version}`));
   console.log(kleur.dim('  Pragmatic Spec-Driven Development — tool-agnostic via AGENTS.md'));
   console.log('');
 }
@@ -42,7 +42,7 @@ function printNextSteps(repoUrl) {
 const program = new Command();
 
 program
-  .name('leanspec')
+  .name('pragspec')
   .description('Scaffold the Pragmatic SDD framework into a project — tool-agnostic via AGENTS.md.')
   .version(pkg.version);
 
@@ -156,7 +156,7 @@ program
       }
     }
 
-    printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/leanspec');
+    printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/pragspec');
   });
 
 program
@@ -178,9 +178,9 @@ program
     if (!(await isClaudeSddProject(cwd))) {
       console.error(
         kleur.red('Error:') +
-          ' this directory does not look like a leanspec project (no `.claude/skills/sdd/SKILL.md`).'
+          ' this directory does not look like a pragspec project (no `.claude/skills/sdd/SKILL.md`).'
       );
-      console.error(kleur.dim('  Run `npx leanspec init` first.'));
+      console.error(kleur.dim('  Run `npx pragspec init` first.'));
       process.exit(1);
     }
 

@@ -20,7 +20,7 @@ This skill is the entry point of the SDD flow for individual tasks. Invoke it wh
 
 ## Pre-check: is the project context set up?
 
-Before classifying any task, glance at `AGENTS.md`. If it still contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}`), the project was recently scaffolded by `leanspec init` but the per-project context was never filled in. Tell the user:
+Before classifying any task, glance at `AGENTS.md`. If it still contains literal `{{PLACEHOLDER}}` strings (e.g. `{{PROJECT_DESCRIPTION}}`, `{{REPO_LAYOUT}}`, `{{CONSTRAINTS}}`), the project was recently scaffolded by `pragspec init` but the per-project context was never filled in. Tell the user:
 
 > Your `AGENTS.md` still has unresolved placeholders. Run `/sdd-init` first to customize it for this project — I can pick up the task right after.
 

@@ -1,13 +1,13 @@
 ---
 name: sdd-init
-description: Customize or refresh the SDD project context for this repo — fills the scaffolded AGENTS.md placeholders by reading the codebase, proposes extensions, and audits AGENTS.md for drift and bloat. Invoke after `leanspec init`, or anytime the project context needs updating (stack changed, new top-level dirs, AGENTS.md feels stale).
+description: Customize or refresh the SDD project context for this repo — fills the scaffolded AGENTS.md placeholders by reading the codebase, proposes extensions, and audits AGENTS.md for drift and bloat. Invoke after `pragspec init`, or anytime the project context needs updating (stack changed, new top-level dirs, AGENTS.md feels stale).
 ---
 
 # SDD Init
 
 Sibling of the `sdd` skill. Where `sdd` orchestrates the SDD pipeline for individual tasks, `sdd-init` keeps the **project-level context** (AGENTS.md, extension selection, first ADR) accurate. Invoke this skill in two situations:
 
-- **First-time setup** — right after `npx leanspec init`, when AGENTS.md still has unresolved `{{PLACEHOLDERS}}`.
+- **First-time setup** — right after `npx pragspec init`, when AGENTS.md still has unresolved `{{PLACEHOLDERS}}`.
 - **Refresh** — anytime the user says AGENTS.md feels stale, or after a significant change (stack swap, monorepo split, big dependency upgrade).
 
 The `sdd` skill itself does not do this work — if it sees unresolved `{{PLACEHOLDERS}}` it tells the user to run `/sdd-init` first.
@@ -171,7 +171,7 @@ After the user picks:
 ### Out of scope for refresh
 
 - Re-running the constraints questionnaire from Mode A (those answers are user-supplied; do not regenerate without the user asking).
-- Touching `templates/AGENTS.md` in the `leanspec` repo. This skill operates on the user's project's AGENTS.md only.
+- Touching `templates/AGENTS.md` in the `pragspec` repo. This skill operates on the user's project's AGENTS.md only.
 - Changing `specs/features/<area>/*.spec.md` — those are owned by the SDD pipeline (`sdd` skill).
 
 ---
@@ -180,4 +180,4 @@ After the user picks:
 
 - Not a task classifier — that's `sdd`.
 - Not a spec generator — that's `sdd` + the prompts in `specs/prompts/`.
-- Not a project bootstrapper — that's `npx leanspec init`. This skill runs *after* the bootstrapper.
+- Not a project bootstrapper — that's `npx pragspec init`. This skill runs *after* the bootstrapper.
