@@ -71,3 +71,42 @@ jobs:
             exit 1
           fi
           echo "Invalid extension rejection OK"
+
+      - name: Smoke — update preserves customizations
+        run: |
+          TMP=$(mktemp -d)
+          cd "$TMP"
+          # Initial install
+          node ${{ github.workspace }}/bin/cli.js init --yes --project-name "ci-update" --stack node
+          # Customize AGENTS.md outside the managed section
+          sed -i 's|{{PROJECT_DESCRIPTION}}|My custom project description that must survive|' AGENTS.md
+          # Corrupt the managed section to verify it gets restored
+          sed -i 's|### Companion skills (optional, recommended)|### Companion skills (optional, recommended)\n\nCORRUPTED CONTENT|' AGENTS.md
+          # Make a skill file stale
+          echo "# stale skill content" > .claude/skills/sdd/SKILL.md
+          # Run update
+          node ${{ github.workspace }}/bin/cli.js update --yes
+          # Verify customization preserved
+          grep -q "My custom project description that must survive" AGENTS.md
+          # Verify managed section restored
+          ! grep -q "CORRUPTED CONTENT" AGENTS.md
+          grep -q "superpowers:requesting-code-review" AGENTS.md
+          # Verify skill restored
+          grep -q "Companion skill convention" .claude/skills/sdd/SKILL.md
+          # Verify .bak files exist
+          test -f AGENTS.md.bak
+          test -f .claude/skills/sdd/SKILL.md.bak
+          # Run update again — must be all-unchanged
+          out=$(node ${{ github.workspace }}/bin/cli.js update --yes)
+          echo "$out" | grep -q "Nothing to do"
+          echo "Update smoke OK"
+
+      - name: Smoke — update fails fast outside a claude-sdd project
+        run: |
+          TMP=$(mktemp -d)
+          cd "$TMP"
+          if node ${{ github.workspace }}/bin/cli.js update --yes 2>/dev/null; then
+            echo "ERROR: update should have failed in non-claude-sdd directory"
+            exit 1
+          fi
+          echo "Update fail-fast OK"

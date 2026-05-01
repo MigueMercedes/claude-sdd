@@ -355,6 +355,11 @@ npx github:MigueMercedes/claude-sdd init --no-gitignore
 
 # Force the 5-question interactive flow even in an existing project
 npx github:MigueMercedes/claude-sdd init --ask
+
+# Update an existing installation (skills + AGENTS.md managed sections)
+npx github:MigueMercedes/claude-sdd update
+npx github:MigueMercedes/claude-sdd update --dry-run     # preview only
+npx github:MigueMercedes/claude-sdd update --yes         # non-interactive
 ```
 
 ### Stacks supported by the picker
@@ -447,13 +452,31 @@ Yes — they're plain markdown files in `specs/prompts/` after install. Edit fre
 
 ### How do I update to a newer version?
 
-Re-run the `init` command with `--skill-only --overwrite` to refresh both skills (`sdd` and `sdd-init`) without touching any other file. Your specs in `specs/features/` are never touched. With `--overwrite`, any file actually replaced is preserved as `<file>.bak` next to the new one.
+Run the `update` subcommand from the root of your project:
 
 ```bash
-npx github:MigueMercedes/claude-sdd init --skill-only --overwrite
+npx github:MigueMercedes/claude-sdd update
 ```
 
-We'll add a proper `update` command in a later version.
+It shows you a plan first (what will change), asks for confirmation, then applies. Every file it modifies gets a `.bak` next to it for safety.
+
+What `update` touches:
+- `.claude/skills/sdd/SKILL.md` and `.claude/skills/sdd-init/SKILL.md` — replaced with the latest upstream version.
+- `AGENTS.md` — only the framework-managed sub-section `### Companion skills (optional, recommended)` is replaced. Your `## Project Overview`, `## Project Constraints`, `## Repo Layout`, `### Project-specific skills`, and any other content you wrote — all preserved untouched.
+
+What it never touches:
+- `CLAUDE.md`, `SPEC_PIPELINE.md`, `README.md`, every spec under `specs/features/`, every ADR under `docs/adr/`, runbooks, your code. Out of scope, full stop.
+
+Useful flags:
+
+```bash
+npx claude-sdd update --dry-run        # show plan, write nothing
+npx claude-sdd update --yes            # non-interactive (CI / scripts)
+npx claude-sdd update --skills-only    # only refresh .claude/skills/
+npx claude-sdd update --docs-only      # only refresh the AGENTS.md section
+```
+
+If your `AGENTS.md` predates the `### Companion skills` sub-heading (very early adopters), `update` reports `manual-required` for that section without touching anything. Either edit AGENTS.md by hand to add the heading, or back it up and re-run `init --overwrite`.
 
 ### Can I use this for client work / commercial projects?
 

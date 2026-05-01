@@ -3,8 +3,9 @@
 import { Command } from 'commander';
 import kleur from 'kleur';
 import { createRequire } from 'node:module';
-import { askInteractive, askConfirmInstall } from '../lib/prompts.js';
+import { askInteractive, askConfirmInstall, askConfirmUpdate } from '../lib/prompts.js';
 import { installTemplates, appendGitignore, reportFile, EXTENSIONS, isExistingProject, isValidExtensionId } from '../lib/install.js';
+import { updateProject, isClaudeSddProject } from '../lib/update.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -158,7 +159,142 @@ program
     printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/claude-sdd');
   });
 
+program
+  .command('update')
+  .description('Sync skill files and managed AGENTS.md sections with the upstream template')
+  .option('-y, --yes', 'Non-interactive: skip the confirmation prompt', false)
+  .option('--dry-run', 'Show the plan without writing any files', false)
+  .option('--skills-only', 'Only update .claude/skills/ files', false)
+  .option('--docs-only', 'Only update managed sections in AGENTS.md', false)
+  .action(async (opts) => {
+    printBanner();
+    const cwd = process.cwd();
+
+    if (opts.skillsOnly && opts.docsOnly) {
+      console.error(kleur.red('Error:') + ' --skills-only and --docs-only are mutually exclusive');
+      process.exit(1);
+    }
+
+    if (!(await isClaudeSddProject(cwd))) {
+      console.error(
+        kleur.red('Error:') +
+          ' this directory does not look like a claude-sdd project (no `.claude/skills/sdd/SKILL.md`).'
+      );
+      console.error(kleur.dim('  Run `npx claude-sdd init` first.'));
+      process.exit(1);
+    }
+
+    /** @type {'all' | 'skills-only' | 'docs-only'} */
+    const scope = opts.skillsOnly ? 'skills-only' : opts.docsOnly ? 'docs-only' : 'all';
+
+    // First pass: dry-run to compute the plan without touching disk.
+    const plan = await updateProject({ cwd, scope, dryRun: true });
+
+    console.log(kleur.bold('Plan:'));
+    let willChange = 0;
+    let manualRequired = 0;
+    for (const item of plan.items) {
+      const line = formatPlanLine(item);
+      console.log('  ' + line);
+      if (item.action === 'updated') willChange += 1;
+      if (item.action === 'manual-required') manualRequired += 1;
+    }
+    console.log('');
+
+    if (willChange === 0 && manualRequired === 0) {
+      console.log(kleur.green('Nothing to do. ✓') + kleur.dim(' Everything is already up-to-date.'));
+      return;
+    }
+
+    if (opts.dryRun) {
+      console.log(kleur.dim('--dry-run: no files modified.'));
+      return;
+    }
+
+    if (willChange === 0 && manualRequired > 0) {
+      console.log(
+        kleur.yellow('All pending changes require manual action.') +
+          ' See the messages above. No automatic update applied.'
+      );
+      process.exit(1);
+    }
+
+    if (!opts.yes) {
+      const proceed = await askConfirmUpdate({
+        message: `Apply ${willChange} update${willChange === 1 ? '' : 's'}? (.bak files will be created)`,
+      });
+      if (!proceed) {
+        console.log(kleur.red('Cancelled.'));
+        process.exit(1);
+      }
+    }
+
+    // Second pass: actually apply.
+    const applied = await updateProject({ cwd, scope, dryRun: false });
+
+    console.log('');
+    console.log(kleur.bold('Result:'));
+    let updatedCount = 0;
+    let unchangedCount = 0;
+    let skippedCount = 0;
+    for (const item of applied.items) {
+      const line = formatResultLine(item);
+      console.log('  ' + line);
+      if (item.action === 'updated') updatedCount += 1;
+      else if (item.action === 'unchanged') unchangedCount += 1;
+      else skippedCount += 1;
+    }
+
+    console.log('');
+    console.log(
+      kleur.dim(
+        `Summary: ${updatedCount} updated, ${unchangedCount} unchanged${skippedCount ? `, ${skippedCount} skipped (manual action needed)` : ''}.`
+      )
+    );
+    console.log(kleur.dim('Tip: review changes with `git diff` and commit when ready.'));
+  });
+
 program.parseAsync(process.argv).catch((err) => {
   console.error(kleur.red('Error:'), err.message || err);
   process.exit(1);
 });
+
+/**
+ * @param {{ target: string, action: string, detail?: string }} item
+ */
+function formatPlanLine(item) {
+  switch (item.action) {
+    case 'updated':
+      return `${kleur.cyan('↻')} ${item.target} ${kleur.dim('(will overwrite, .bak preserved)')}`;
+    case 'unchanged':
+      return `${kleur.yellow('○')} ${item.target} ${kleur.dim('(already up-to-date)')}`;
+    case 'inserted':
+      return `${kleur.green('+')} ${item.target} ${kleur.dim('(will insert)')}`;
+    case 'manual-required':
+      return `${kleur.yellow('⚠')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'manual action needed'))}`;
+    case 'missing-target':
+      return `${kleur.red('×')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'missing'))}`;
+    default:
+      return `${item.target} (${item.action})`;
+  }
+}
+
+/**
+ * @param {{ target: string, action: string, detail?: string }} item
+ */
+function formatResultLine(item) {
+  switch (item.action) {
+    case 'updated':
+      return `${kleur.green('✓')} ${item.target} ${kleur.dim('(updated, .bak created)')}`;
+    case 'unchanged':
+      return `${kleur.yellow('○')} ${item.target} ${kleur.dim('(unchanged)')}`;
+    case 'inserted':
+      return `${kleur.green('✓')} ${item.target} ${kleur.dim('(inserted)')}`;
+    case 'manual-required':
+      return `${kleur.yellow('⚠')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'manual action needed'))}`;
+    case 'missing-target':
+      return `${kleur.red('×')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'missing'))}`;
+    default:
+      return `${item.target} (${item.action})`;
+  }
+}
