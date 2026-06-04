@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { askInteractive, askConfirmInstall, askConfirmUpdate } from '../lib/prompts.js';
 import { installTemplates, appendGitignore, reportFile, EXTENSIONS, isExistingProject, isValidExtensionId } from '../lib/install.js';
 import { updateProject, isClaudeSddProject } from '../lib/update.js';
+import { writeMetadata, classifyVersionDelta, METADATA_DISPLAY } from '../lib/metadata.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -156,6 +157,19 @@ program
       }
     }
 
+    // Record provenance so `pragspec update` can report the installed version.
+    // Skipped for --skill-only, which intentionally writes only .claude/skills/.
+    // This file is framework-owned (not user-authored), so it is always refreshed
+    // regardless of onConflict — writeMetadata preserves the original installedAt.
+    if (!opts.skillOnly) {
+      await writeMetadata(cwd, {
+        version: pkg.version,
+        stack: answers.stack,
+        extensions: answers.extensions,
+      });
+      console.log(`  ${kleur.green('✓')} ${METADATA_DISPLAY} ${kleur.dim(`(records pragspec v${pkg.version})`)}`);
+    }
+
     printNextSteps(pkg.homepage || pkg.repository?.url || 'https://github.com/MigueMercedes/pragspec');
   });
 
@@ -188,7 +202,21 @@ program
     const scope = opts.skillsOnly ? 'skills-only' : opts.docsOnly ? 'docs-only' : 'all';
 
     // First pass: dry-run to compute the plan without touching disk.
-    const plan = await updateProject({ cwd, scope, dryRun: true });
+    const plan = await updateProject({ cwd, scope, dryRun: true, packageVersion: pkg.version });
+
+    if (plan.toVersion) {
+      const delta = classifyVersionDelta(plan.fromVersion, plan.toVersion);
+      const line =
+        delta === 'fresh'
+          ? `${kleur.dim('(no prior metadata)')} → recording v${plan.toVersion}`
+          : delta === 'upgrade'
+            ? `${plan.fromVersion} ${kleur.cyan('→')} ${plan.toVersion} ${kleur.dim('(upgrade)')}`
+            : delta === 'downgrade'
+              ? `${plan.fromVersion} ${kleur.cyan('→')} ${plan.toVersion} ${kleur.yellow('(local copy is newer)')}`
+              : `v${plan.toVersion} ${kleur.dim('(up to date)')}`;
+      console.log(kleur.bold('Framework version: ') + line);
+      console.log('');
+    }
 
     console.log(kleur.bold('Plan:'));
     let willChange = 0;
@@ -196,7 +224,7 @@ program
     for (const item of plan.items) {
       const line = formatPlanLine(item);
       console.log('  ' + line);
-      if (item.action === 'updated') willChange += 1;
+      if (item.action === 'updated' || item.action === 'inserted') willChange += 1;
       if (item.action === 'manual-required') manualRequired += 1;
     }
     console.log('');
@@ -220,8 +248,13 @@ program
     }
 
     if (!opts.yes) {
+      // Only file-overwriting changes produce a .bak; a lone metadata version
+      // stamp does not — don't promise backups that won't happen.
+      const willBackup = plan.items.some(
+        (i) => (i.kind === 'skill' || i.kind === 'agents-section') && i.action === 'updated'
+      );
       const proceed = await askConfirmUpdate({
-        message: `Apply ${willChange} update${willChange === 1 ? '' : 's'}? (.bak files will be created)`,
+        message: `Apply ${willChange} update${willChange === 1 ? '' : 's'}?${willBackup ? ' (.bak files will be created)' : ''}`,
       });
       if (!proceed) {
         console.log(kleur.red('Cancelled.'));
@@ -230,7 +263,7 @@ program
     }
 
     // Second pass: actually apply.
-    const applied = await updateProject({ cwd, scope, dryRun: false });
+    const applied = await updateProject({ cwd, scope, dryRun: false, packageVersion: pkg.version });
 
     console.log('');
     console.log(kleur.bold('Result:'));
@@ -240,7 +273,7 @@ program
     for (const item of applied.items) {
       const line = formatResultLine(item);
       console.log('  ' + line);
-      if (item.action === 'updated') updatedCount += 1;
+      if (item.action === 'updated' || item.action === 'inserted') updatedCount += 1;
       else if (item.action === 'unchanged') unchangedCount += 1;
       else skippedCount += 1;
     }
@@ -260,9 +293,15 @@ program.parseAsync(process.argv).catch((err) => {
 });
 
 /**
- * @param {{ target: string, action: string, detail?: string }} item
+ * @param {{ target: string, action: string, kind?: string, detail?: string }} item
  */
 function formatPlanLine(item) {
+  if (item.kind === 'metadata') {
+    if (item.action === 'unchanged') {
+      return `${kleur.yellow('○')} ${item.target} ${kleur.dim('(version up-to-date)')}`;
+    }
+    return `${kleur.cyan('↻')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'version stamp'))}`;
+  }
   switch (item.action) {
     case 'updated':
       return `${kleur.cyan('↻')} ${item.target} ${kleur.dim('(will overwrite, .bak preserved)')}`;
@@ -280,9 +319,15 @@ function formatPlanLine(item) {
 }
 
 /**
- * @param {{ target: string, action: string, detail?: string }} item
+ * @param {{ target: string, action: string, kind?: string, detail?: string }} item
  */
 function formatResultLine(item) {
+  if (item.kind === 'metadata') {
+    if (item.action === 'unchanged') {
+      return `${kleur.yellow('○')} ${item.target} ${kleur.dim('(version up-to-date)')}`;
+    }
+    return `${kleur.green('✓')} ${item.target} ${kleur.dim('— ' + (item.detail ?? 'version recorded'))}`;
+  }
   switch (item.action) {
     case 'updated':
       return `${kleur.green('✓')} ${item.target} ${kleur.dim('(updated, .bak created)')}`;

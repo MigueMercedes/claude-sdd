@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { installTemplates } from '../lib/install.js';
 import { updateProject, isClaudeSddProject } from '../lib/update.js';
+import { readMetadata, writeMetadata } from '../lib/metadata.js';
 
 /** @type {string} */
 let tmpDir;
@@ -189,6 +190,95 @@ describe('updateProject', () => {
     await updateProject({ cwd: tmpDir, dryRun: false });
 
     const second = await updateProject({ cwd: tmpDir, dryRun: false });
+    for (const item of second.items) {
+      expect(item.action, `${item.target} on second run`).toBe('unchanged');
+    }
+  });
+});
+
+describe('updateProject — version metadata (packageVersion provided)', () => {
+  it('does NOT add a metadata item when packageVersion is omitted (back-compat)', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const result = await updateProject({ cwd: tmpDir, dryRun: true });
+    expect(result.items.find((i) => i.kind === 'metadata')).toBeUndefined();
+    expect(result.fromVersion).toBeNull();
+    expect(result.toVersion).toBeNull();
+  });
+
+  it('inserts metadata on a legacy install (no prior metadata)', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const result = await updateProject({
+      cwd: tmpDir,
+      dryRun: false,
+      packageVersion: '0.2.1',
+      now: '2026-06-04T00:00:00.000Z',
+    });
+    const metaItem = result.items.find((i) => i.kind === 'metadata');
+    expect(metaItem?.action).toBe('inserted');
+    expect(result.fromVersion).toBeNull();
+    expect(result.toVersion).toBe('0.2.1');
+
+    const onDisk = await readMetadata(tmpDir);
+    expect(onDisk?.version).toBe('0.2.1');
+    expect(onDisk?.installedAt).toBe('2026-06-04T00:00:00.000Z');
+  });
+
+  it('dry-run with packageVersion reports the metadata item but writes nothing', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const result = await updateProject({ cwd: tmpDir, dryRun: true, packageVersion: '0.2.1' });
+    const metaItem = result.items.find((i) => i.kind === 'metadata');
+    expect(metaItem?.action).toBe('inserted');
+    expect(await readMetadata(tmpDir)).toBeNull();
+  });
+
+  it('marks metadata unchanged when recorded version equals packageVersion', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    await writeMetadata(tmpDir, { version: '0.2.1', now: '2026-01-01T00:00:00.000Z' });
+    const result = await updateProject({ cwd: tmpDir, dryRun: false, packageVersion: '0.2.1' });
+    const metaItem = result.items.find((i) => i.kind === 'metadata');
+    expect(metaItem?.action).toBe('unchanged');
+    // installedAt untouched because nothing was rewritten
+    const onDisk = await readMetadata(tmpDir);
+    expect(onDisk?.installedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(onDisk?.updatedAt).toBe('2026-01-01T00:00:00.000Z');
+  });
+
+  it('upgrades metadata version while preserving installedAt', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    await writeMetadata(tmpDir, {
+      version: '0.2.0',
+      stack: 'python',
+      extensions: ['persistent-data'],
+      now: '2026-01-01T00:00:00.000Z',
+    });
+    const result = await updateProject({
+      cwd: tmpDir,
+      dryRun: false,
+      packageVersion: '0.3.0',
+      now: '2026-06-04T00:00:00.000Z',
+    });
+    const metaItem = result.items.find((i) => i.kind === 'metadata');
+    expect(metaItem?.action).toBe('updated');
+    expect(metaItem?.detail).toContain('0.2.0 → 0.3.0');
+    expect(result.fromVersion).toBe('0.2.0');
+    expect(result.toVersion).toBe('0.3.0');
+
+    const onDisk = await readMetadata(tmpDir);
+    expect(onDisk?.version).toBe('0.3.0');
+    expect(onDisk?.installedAt).toBe('2026-01-01T00:00:00.000Z');
+    expect(onDisk?.updatedAt).toBe('2026-06-04T00:00:00.000Z');
+    // informational fields preserved across the version bump
+    expect(onDisk?.stack).toBe('python');
+    expect(onDisk?.extensions).toEqual(['persistent-data']);
+  });
+
+  it('is idempotent with packageVersion — second run is all-unchanged including metadata', async () => {
+    await installTemplates({ cwd: tmpDir, vars: VARS });
+    const skillPath = path.join(tmpDir, '.claude/skills/sdd/SKILL.md');
+    await fs.writeFile(skillPath, '# stale');
+
+    await updateProject({ cwd: tmpDir, dryRun: false, packageVersion: '0.2.1' });
+    const second = await updateProject({ cwd: tmpDir, dryRun: false, packageVersion: '0.2.1' });
     for (const item of second.items) {
       expect(item.action, `${item.target} on second run`).toBe('unchanged');
     }

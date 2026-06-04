@@ -155,6 +155,12 @@ Beyond the companion skills referenced inline above (canonical list in [`AGENTS.
 
 ---
 
+## Output discipline
+
+Keep your conversational responses terse — full rules in [`AGENTS.md` §Output discipline](../../../AGENTS.md#output-discipline). In short: code-first, one line per decision, `path:line` references, no preamble or filler. This governs how you REPORT progress; the spec / tests / ADRs you produce follow their own templates and stay as detailed as needed. SHORT-CIRCUIT → one-line confirmation + verification.
+
+---
+
 ## Step 5: output format
 
 ### FULL/FAST

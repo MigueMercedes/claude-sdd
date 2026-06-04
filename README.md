@@ -226,9 +226,12 @@ your-project/
 ├── docs/
 │   ├── adr/0000-template.md        # ADR template based on Michael Nygard's format
 │   └── runbooks/                   # Empty — populated as you write runbooks
+├── .pragspec/
+│   └── metadata.json               # Provenance: which pragspec version scaffolded this (used by `update`)
 └── .claude/
     └── skills/
-        └── sdd/SKILL.md            # The skill that orchestrates everything
+        ├── sdd/SKILL.md            # The skill that orchestrates the per-task pipeline
+        └── sdd-init/SKILL.md       # The skill that fills AGENTS.md + audits drift/bloat
 ```
 
 Existing files are **never overwritten by default** — the CLI prompts you per file. Use `--overwrite` if you really want to replace.
@@ -459,11 +462,12 @@ Run the `update` subcommand from the root of your project:
 npx pragspec update
 ```
 
-It shows you a plan first (what will change), asks for confirmation, then applies. Every file it modifies gets a `.bak` next to it for safety.
+It shows you a plan first (what will change), asks for confirmation, then applies. Every file it modifies gets a `.bak` next to it for safety. The plan header also reports the version transition it read from `.pragspec/metadata.json` (e.g. `Framework version: 0.2.0 → 0.3.0 (upgrade)`); on a legacy install with no metadata it records the current version for the first time.
 
 What `update` touches:
 - `.claude/skills/sdd/SKILL.md` and `.claude/skills/sdd-init/SKILL.md` — replaced with the latest upstream version.
 - `AGENTS.md` — only the framework-managed sub-section `### Companion skills (optional, recommended)` is replaced. Your `## Project Overview`, `## Project Constraints`, `## Repo Layout`, `### Project-specific skills`, and any other content you wrote — all preserved untouched.
+- `.pragspec/metadata.json` — the recorded version is bumped to the running package version once the update succeeds. This is provenance only; it never decides what gets updated.
 
 What it never touches:
 - `CLAUDE.md`, `SPEC_PIPELINE.md`, `README.md`, every spec under `specs/features/`, every ADR under `docs/adr/`, runbooks, your code. Out of scope, full stop.
@@ -591,9 +595,9 @@ These three are the de facto standard for CLI UX in Node. Anyone reading the sou
 
 It's 2026. Node has supported ESM in production for years. Modern shape, no CommonJS workarounds.
 
-### Why we don't bundle a `update` command
+### Why `update` is content-diff + version-aware (not a full merge)
 
-The framework is mostly markdown templates. An `update` would have to merge user customizations with upstream changes — a hard problem with low ROI for now. Re-running `init --skill-only --overwrite` updates the skill (the most-iterated piece) without touching prompts the user may have customized. Good enough for v0.x.
+The framework is mostly markdown templates, so `update` deliberately avoids the hard problem of three-way-merging user edits with upstream changes. Instead it does two cheap, safe things: (1) **content-diff** the framework-managed files (the two skills + the `### Companion skills` section of `AGENTS.md`) and replace only those when they differ, always leaving a `.bak`; (2) read/write `.pragspec/metadata.json` to record which version scaffolded the project and report the transition (`0.2.0 → 0.3.0`). The recorded version is **provenance and reporting only** — it never gates the diff, so `update` still works on legacy installs that predate the metadata file, and on same-version template tweaks during pre-1.0. Everything the user authors (specs, ADRs, prose in `AGENTS.md`, prompts) is out of scope, full stop.
 
 ### Why no telemetry
 
@@ -601,21 +605,22 @@ No phone-home. No "anonymous usage stats." If we want feedback we'll ask for it 
 
 ## Roadmap
 
-### v0.1.x (current)
+### Shipped (0.2.x)
 - Lean base + 6 opt-in extensions
-- 3-mode skill (FULL / FAST / SHORT-CIRCUIT)
-- Manual update via `init --skill-only --overwrite`
+- 3-mode skill (FULL / FAST / SHORT-CIRCUIT) + `sdd-init` context / refresh skill
+- Init-time existing-project auto-detection (defers stack + extensions to the `sdd-init` skill)
+- `update` command — content-diff of the framework-managed files + `.pragspec/metadata.json` version reporting
+- Output discipline rules in the `sdd` skill / `AGENTS.md` to keep long sessions lean
 
-### v0.2 (planned)
-- `update` command that detects framework version and merges upstream improvements
+### Next (planned)
 - More extensions: `compliance` (GDPR/HIPAA hooks), `real-time` (websocket/streaming), `accessibility-audit`
 - `validate` command that checks an existing spec against the template (catches missing sections, wrong status field, etc.)
-- Init-time stack auto-detection (read `package.json` / `pyproject.toml` and pre-fill stack)
-
-### v0.3 (planned)
 - Plug-in system for custom extensions distributed as separate packages
 - Spec-to-ticket bridge (auto-create Linear/GitHub issues from new specs)
 - Lint rules for specs (require Status field, require Mode field, etc.)
+
+### Researched, deferred
+- **AST-based repo-map / code-graph skill** (à la aider's repomap or [graphify](https://github.com/safishamsi/graphify)). Inspiration-only: tree-sitter needs native bindings or bundled WASM grammars, which break the "3 deps, no build step" constraint. If revisited, it would be an opt-in skill that *delegates* to an externally-installed graph tool, not a bundled parser.
 
 ### v1.0 (target)
 - API frozen
@@ -638,7 +643,7 @@ Pre-1.0, the API is moving. Issues and small PRs are welcome; large PRs should s
 git clone https://github.com/MigueMercedes/pragspec
 cd pragspec
 npm install
-npm test                        # 19 tests across CLI + extension composition
+npm test                        # full suite: install, extensions, update, metadata, docs-consistency
 node bin/cli.js init --yes      # smoke test in a temp dir
 ```
 
@@ -660,9 +665,7 @@ Tests use vitest. Unit tests for CLI logic in `tests/`. CI runs the unit tests a
 
 ### Releasing
 
-While in 0.x: just push to `main`. Users picking up the package via `npx github:` get the latest commit on each install.
-
-When stable enough for npm: tag with `v1.0.0`, GitHub Action publishes to the registry.
+Published to npm as `pragspec`. To cut a release: bump `package.json` per semver (while pre-1.0, minor `0.x.0` for breaking changes, patch `0.x.y` for everything else), then `npm publish`. `npx github:MigueMercedes/pragspec` remains available as a fallback for unpublished branches / forks.
 
 ### Code of conduct
 

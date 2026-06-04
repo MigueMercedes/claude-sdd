@@ -1,6 +1,6 @@
 {
   "name": "pragspec",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Pragmatic Spec-Driven Development — npm CLI that scaffolds the SDD pipeline (specs, prompts, skills, ADR/runbook conventions) into any project. Tool-agnostic via AGENTS.md.",
   "type": "module",
   "bin": {
