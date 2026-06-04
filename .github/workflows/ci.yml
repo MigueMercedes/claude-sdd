@@ -37,7 +37,14 @@ jobs:
           test ! -f .gitignore.additions
           test -f specs/templates/extensions/multi-tenant.md
           test -f specs/templates/extensions/persistent-data.md
+          # Provenance metadata is written on init (records the package version)
+          test -f .pragspec/metadata.json
+          grep -q '"name": "pragspec"' .pragspec/metadata.json
+          grep -q '"version"' .pragspec/metadata.json
           ! grep -q "{{PROJECT_NAME}}" AGENTS.md
+          # Output discipline section ships in the canonical context + the sdd skill
+          grep -q "## Output discipline" AGENTS.md
+          grep -q "Output discipline" .claude/skills/sdd/SKILL.md
           ! grep -q "## Multi-tenant boundary" specs/templates/feature.spec.md
           # Companion-skill canonicalization: AGENTS.md is the single source
           grep -q "### Companion skills" AGENTS.md
@@ -60,6 +67,9 @@ jobs:
           grep -q "Extensions enabled: multi-tenant, persistent-data, operational" specs/templates/feature.spec.md
           # Review notes must remain at the bottom
           tail -20 specs/templates/feature.spec.md | grep -q "## Review notes"
+          # Metadata records the chosen extensions
+          grep -q "multi-tenant" .pragspec/metadata.json
+          grep -q "operational" .pragspec/metadata.json
           echo "Extensions smoke OK"
 
       - name: Smoke — invalid extension fails fast
@@ -96,9 +106,10 @@ jobs:
           # Verify .bak files exist
           test -f AGENTS.md.bak
           test -f .claude/skills/sdd/SKILL.md.bak
-          # Run update again — must be all-unchanged
+          # Run update again — must be all-unchanged and report the version line
           out=$(node ${{ github.workspace }}/bin/cli.js update --yes)
           echo "$out" | grep -q "Nothing to do"
+          echo "$out" | grep -q "Framework version"
           echo "Update smoke OK"
 
       - name: Smoke — update fails fast outside a pragspec project

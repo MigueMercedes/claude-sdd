@@ -60,6 +60,21 @@ SHORT-CIRCUIT skips directly to diff + verify.
 
 ---
 
+## Output discipline
+
+Applies to your **conversational** responses (chat, status, summaries) — **not** to generated spec / ADR / test artifacts, which follow their templates and stay as detailed as the work needs.
+
+- Lead with the change or answer; skip preamble and restating the question.
+- One line per decision: what + why. Don't narrate the plan back.
+- A few lines of prose per step unless asked for detail or doing FULL-mode design.
+- Reference files as `path:line`; don't paste back files you just read or wrote.
+- SHORT-CIRCUIT tasks → one-line confirmation + the verification result.
+- No filler, no flattery, no emojis unless requested. Match length to task size.
+
+Rationale: in long sessions, response text is re-fed every turn, so terse chat output is the biggest lever against context bloat and terminal scrollback. Detail belongs in the durable artifacts, not the conversation.
+
+---
+
 ## Selective TDD
 
 Test-first is NOT uniform. Depends on the type of code:

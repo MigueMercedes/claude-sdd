@@ -67,7 +67,17 @@ Single `init` command. Three branches in the answer-gathering logic:
 
 CLI flags (e.g. `--extensions`) override prompted answers when both are given.
 
-`--skill-only` restricts the install to `.claude/skills/` (both `sdd` and `sdd-init`). The dedicated `update` subcommand (in `lib/update.js`) is the user-facing path for bringing existing installs up to date — it reuses the skill-only install path internally and additionally syncs framework-managed sub-sections of `AGENTS.md` (currently just `### Companion skills`).
+`--skill-only` restricts the install to `.claude/skills/` (both `sdd` and `sdd-init`); in this mode the CLI does **not** write `.pragspec/metadata.json` (it only ever writes `.claude/skills/`). Every other `init` mode writes the metadata file after copying templates.
+
+### `update` subcommand (`lib/update.js`)
+
+The user-facing path for bringing existing installs up to date. It does **not** call `installTemplates`; it has its own plan/apply logic:
+- **Content-diff** the framework-managed files — the two skill files and the `### Companion skills` sub-section of `AGENTS.md` (`AGENTS_MANAGED_SECTIONS`) — replacing only those that differ from upstream, always writing a `.bak`.
+- **Version metadata** (`lib/metadata.js`): when the CLI passes `packageVersion`, `update` reads `.pragspec/metadata.json`, emits a `metadata` plan item, reports `fromVersion → toVersion`, and rewrites the version on apply. The recorded version is **provenance/reporting only — it never gates the content-diff** (so `update` works on legacy installs with no metadata, and on same-version template tweaks). Programmatic callers that omit `packageVersion` get byte-identical pre-metadata behaviour, which is why the original `updateProject` tests still pass unchanged.
+
+### Provenance metadata (`lib/metadata.js`)
+
+`.pragspec/metadata.json` records `{ name, version, installedAt, updatedAt, stack?, extensions? }`. `writeMetadata()` preserves `installedAt` (and any prior `stack`/`extensions`) across rewrites; `now` is injectable for deterministic tests. `compareSemver()` / `classifyVersionDelta()` drive the `update` version report. The file is meant to be committed (provenance for the whole team) — it is **not** added to `.gitignore`.
 
 ## Conventions specific to this repo
 
@@ -75,10 +85,11 @@ CLI flags (e.g. `--extensions`) override prompted answers when both are given.
 - **JS + JSDoc, not TypeScript.** All source files have `// @ts-check` and JSDoc types. Don't introduce a TS toolchain — this is a deliberate simplicity choice (README "Why JavaScript (not TypeScript)").
 - **ESM only.** `import`, not `require` (except via `createRequire` for `package.json`).
 - **`templates/` files are user-facing.** Editing `templates/AGENTS.md` (canonical context), `templates/CLAUDE.md` (shim), `SPEC_PIPELINE.md`, or any prompt under `templates/specs/prompts/` changes what users get on `init`. Review those edits with the same care as a public API change.
-- **Smoke tests are part of CI.** `.github/workflows/ci.yml` runs three end-to-end smoke checks (lean install, with-extensions, invalid-extension-rejection) across Node 18/20/22. If you change install behavior, mirror the change in the workflow's grep assertions.
+- **Smoke tests are part of CI.** `.github/workflows/ci.yml` runs five end-to-end smoke checks (lean install, with-extensions, invalid-extension-rejection, update-preserves-customizations, update-fail-fast-outside-project) across Node 18/20/22. The lean/extensions smokes also assert `.pragspec/metadata.json` and the `## Output discipline` section. If you change install/update behavior, mirror the change in the workflow's grep assertions.
 - **Pre-1.0, published to npm as `pragspec`**. Distributed via the registry (`npx pragspec`) with the git URL form (`npx github:MigueMercedes/pragspec`) as fallback for unpublished branches / forks. Bump `package.json` version per semver before each `npm publish`; while pre-1.0 we use minor bumps (0.x.0) for breaking changes and patch bumps (0.x.y) for everything else.
 
 ## What lives where
 
 - The Pragmatic SDD philosophy (FULL/FAST/SHORT-CIRCUIT modes, Selective TDD, Spec-vs-ADR, extension catalog) is documented in **`README.md`** and reproduced in the templates that get installed (`templates/AGENTS.md`, `templates/SPEC_PIPELINE.md`, `templates/.claude/skills/sdd/SKILL.md`, `templates/.claude/skills/sdd-init/SKILL.md`). When the philosophy changes, those five places need to stay aligned. `templates/CLAUDE.md` is a thin shim and rarely needs updates beyond the pointer.
+- **Output discipline** is canonical in `templates/AGENTS.md` (`## Output discipline`) and referenced — not duplicated — by the `sdd` skill (`templates/.claude/skills/sdd/SKILL.md`). It scopes terseness to *conversational* responses and explicitly exempts generated spec/ADR/test artifacts; keep that exemption if you edit it, and keep the canonical copy in `AGENTS.md`.
 - **This** `CLAUDE.md` is for working *on* the scaffolder, not *with* it. The SDD pipeline (specs, ADRs, etc.) is **not** applied to changes inside this repo — there is no `specs/` directory here, and code changes are reviewed conventionally via PR.

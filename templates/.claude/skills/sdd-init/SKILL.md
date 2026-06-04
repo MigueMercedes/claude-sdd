@@ -133,6 +133,7 @@ Flag sections of `AGENTS.md` that an agent does not use. Be **conservative** —
 - Constraints, tradeoffs, "why we don't do X" notes.
 - Repo layout, even if long.
 - `## Available Skills` section — it is the canonical companion-skill registry that `sdd` references at runtime. Do not remove or shrink it; if a skill name is outdated, fix it as a drift correction (Pass 1) instead.
+- `## Output discipline` section — canonical, framework-managed; the `sdd` skill links to it at runtime. Its rules are intentionally generic (they govern conversational responses), so do NOT flag it as generic-best-practice bloat. Leave it intact.
 
 When in doubt, keep it.
 
